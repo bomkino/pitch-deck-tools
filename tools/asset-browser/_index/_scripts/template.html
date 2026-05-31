@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__PROJECT__ — asset index</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23c84a2e'/></svg>">
+<style>
+  :root { --bg: #f6f5f1; --ink: #111; --muted: #7a766e; --line: #e7e4dc; --card: #fff; --accent: #c84a2e; --chip-bg: #ece9df; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15140f; --ink: #f1eee5; --muted: #8a8478; --line: #2a2823; --card: #1d1c17; --accent: #ff8d6b; --chip-bg: #28261f; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+
+  header { padding: 24px 32px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 30; backdrop-filter: saturate(140%) blur(10px); }
+  .title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; }
+  .version-badge { color: var(--accent); font-size: 11px; border: 1px solid var(--accent); padding: 3px 8px; border-radius: 6px; margin-left: 12px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .meta { color: var(--muted); font-size: 13px; }
+
+  .controls { display: flex; gap: 12px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  input[type="search"], select, .pill-input { padding: 10px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); font-size: 14px; }
+  input[type="search"] { flex: 1 1 320px; min-width: 240px; }
+  input[type="search"]:focus, .pill-input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .btn { padding: 10px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { background: var(--chip-bg); }
+  .btn.ghost { background: transparent; }
+  .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .view-toggles { display: flex; gap: 4px; background: var(--card); padding: 4px; border-radius: 8px; border: 1px solid var(--line); }
+  .view-toggles .btn { padding: 6px 12px; border: none; font-size: 16px; color: var(--muted); }
+  .view-toggles .btn.active { background: var(--chip-bg); color: var(--ink); }
+
+  .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+  .chip-row .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
+  .chip { padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 12.5px; cursor: pointer; background: transparent; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+  .chip:hover { color: var(--ink); border-color: var(--muted); }
+  .chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .chip .x { font-size: 14px; opacity: 0.7; margin-left: 2px; }
+
+  .active-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; min-height: 28px; }
+  .clear { color: var(--accent); font-size: 12px; background: none; border: none; cursor: pointer; padding: 6px 12px; }
+
+  main { padding: 24px 32px 80px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; cursor: pointer; position: relative; }
+  .card:focus { outline: 2px solid var(--accent); outline-offset: 4px; }
+  
+  .view-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .view-grid .card { flex-direction: column; }
+  .view-grid .thumb { aspect-ratio: 4/3; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; border-bottom: 1px solid var(--line); }
+  
+  .view-compact { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .view-compact .card { flex-direction: column; border-radius: 8px; }
+  .view-compact .thumb { aspect-ratio: 1; background: var(--bg); position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .view-compact .body { padding: 10px; }
+  .view-compact .row { display: none; }
+
+  .view-list { display: grid; gap: 8px; grid-template-columns: 1fr; }
+  .view-list .card { flex-direction: row; height: 90px; align-items: center; }
+  .view-list .thumb { width: 120px; height: 100%; border-bottom: none; border-right: 1px solid var(--line); flex-shrink: 0; position: relative; overflow: hidden; }
+  .view-list .body { flex-direction: row; align-items: center; justify-content: flex-start; gap: 24px; flex: 1; padding: 0 20px; }
+  .view-list .name { min-width: 250px; flex-shrink: 0; }
+
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  
+  /* AESTHETIC EMPTY THUMBNAIL */
+  .empty-thumb { background: linear-gradient(135deg, var(--chip-bg), var(--bg)); width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: 8px; }
+  .empty-thumb svg { opacity: 0.4; }
+  .empty-thumb span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; opacity: 0.6; }
+  
+  .thumb-count { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.65); color: white; font-size: 10.5px; padding: 3px 7px; border-radius: 4px; }
+  
+  .body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .name { font-weight: 600; font-size: 14px; line-height: 1.3; letter-spacing: -0.005em; }
+  .row { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 11.5px; }
+  .pill { padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 10px; text-transform: uppercase; }
+  .tag-pill { background: var(--chip-bg); border-color: var(--chip-bg); color: var(--ink); padding: 3px 8px; }
+  
+  /* CATEGORY PILL ON CARD */
+  .cat-pill { background: var(--line); color: var(--ink); border-color: var(--line); font-weight: 600; padding: 3px 8px; font-size: 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* APP BADGES */
+  .app-badge { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; display: inline-block; text-transform: uppercase; }
+  .badges-container { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+  .detail-nav { padding: 24px 32px 0; max-width: 980px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+  .detail-nav .hints { color: var(--muted); font-size: 12.5px; }
+  .detail-content { padding: 16px 32px 80px; max-width: 980px; margin: 0 auto; }
+  .detail-header-text h2 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.01em; }
+  .detail-actions { display: flex; gap: 12px; margin: 24px 0; }
+  .gallery { display: grid; gap: 12px; margin-bottom: 32px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .gallery a { display: block; aspect-ratio: 4/3; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; }
+  
+  .section { margin-bottom: 32px; }
+  .section h3 { margin: 0 0 12px; font-size: 11.5px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.04em; }
+  textarea { width: 100%; min-height: 80px; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); }
+  .files-toggle { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 0; margin-bottom: 8px; font-weight: 500; }
+  .files-toggle:hover { color: var(--ink); }
+  .file-list { display: none; max-height: 400px; overflow: auto; padding: 12px 0; border-top: 1px solid var(--line); }
+  .file-list.open { display: block; }
+  .file-list li { list-style: none; font-size: 13px; color: var(--muted); font-family: monospace; padding: 2px 0; }
+
+  dialog { padding: 32px; border: none; background: var(--bg); color: var(--ink); border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 500px; width: 100%; }
+  dialog::backdrop { background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); }
+  dialog h3 { margin: 0 0 16px; font-size: 20px; }
+  .shortcut-grid { display: grid; grid-template-columns: auto 1fr; gap: 12px 24px; align-items: center; font-size: 14px; }
+  kbd { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; font-family: monospace; font-size: 12px; box-shadow: 0 2px 0 var(--line); }
+  
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 20px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 200; font-weight: 500; }
+  .toast.show { opacity: 1; }
+  .save-status { color: var(--muted); font-size: 12px; }
+  .save-status.dirty { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<dialog id="shortcuts-modal">
+  <h3>Keyboard Shortcuts</h3>
+  <div class="shortcut-grid">
+    <kbd>/</kbd> <span>Focus Search</span>
+    <kbd>?</kbd> <span>Show this menu</span>
+    <kbd>Esc</kbd> <span>Go back / Close menus</span>
+    <kbd>Arrows</kbd> <span>Navigate cards</span>
+    <kbd>Enter</kbd> <span>Open selected card</span>
+    <kbd>F</kbd> <span>Reveal in Finder (Detail view)</span>
+    <kbd>C</kbd> <span>Copy Path (Detail view)</span>
+    <kbd>T</kbd> <span>Focus Tags (Detail view)</span>
+    <kbd>N</kbd> <span>Focus Notes (Detail view)</span>
+  </div>
+  <button class="btn primary" style="margin-top: 24px; width: 100%; justify-content: center;" onclick="document.getElementById('shortcuts-modal').close()">Got it</button>
+</dialog>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+const DATA = __DATA__;
+const SEED_USER_DATA = __USER_DATA__;
+const PROJECT_KEY = '__PROJECT_KEY__';
+const STORAGE_KEY = 'pitchdog_userdata_' + PROJECT_KEY;
+
+let userData = (() => {
+  try { const stored = localStorage.getItem(STORAGE_KEY); if (stored) return JSON.parse(stored); } catch (e) {}
+  return JSON.parse(JSON.stringify(SEED_USER_DATA || {}));
+})();
+
+const state = { view: 'grid', listType: 'grid', activeId: null, search: '', cats: new Set(), types: new Set(), tags: new Set(), usedIn: new Set(), sort: 'name' };
+window.currentMatches = []; 
+let lastActiveId = null;
+
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SERVED = location.protocol.startsWith('http');
+
+async function osOpen(path, reveal = false) {
+  if (!SERVED) return copy(path, 'path (open via Cmd+Shift+G in Finder)');
+  try { await fetch(`/_open?reveal=${reveal ? 1 : 0}&path=` + encodeURIComponent(path)); } catch (e) {}
+}
+
+function toastMsg(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function ud(id) {
+  if (!userData[id]) userData[id] = {tags: [], used_in: [], notes: ''};
+  return userData[id];
+}
+
+let saveTimeout;
+function saveUserData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+  if (state.view === 'grid') renderFilters(); 
+  clearTimeout(saveTimeout); saveTimeout = setTimeout(() => {}, 0);
+}
+
+function copy(text, label) {
+  navigator.clipboard.writeText(text).then(() => toastMsg('Copied: ' + (label || text.split('/').pop())));
+}
+
+// ─── FILTER & SORT ──────────────────────────────────────────────────────
+function passes(b) {
+  if (state.cats.size && !state.cats.has(b.category)) return false;
+  if (state.types.size && !b.types.some(t => state.types.has(t))) return false;
+  const u = userData[b.id] || {};
+  if (state.tags.size && !(u.tags || []).some(t => state.tags.has(t))) return false;
+  if (state.usedIn.size && !(u.used_in || []).some(t => state.usedIn.has(t))) return false;
+  
+  if (state.search) {
+    const hay = (b.name + ' ' + b.raw_name + ' ' + b.types.join(' ') + ' ' + (u.tags || []).join(' ') + ' ' + (u.used_in || []).join(' ') + ' ' + (u.notes || '')).toLowerCase();
+    const tokens = state.search.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!tokens.every(token => {
+      if (hay.includes(token)) return true;
+      const fuzzyRegex = new RegExp(token.split('').join('.*?'), 'i');
+      return fuzzyRegex.test(hay);
+    })) return false;
+  }
+  return true;
+}
+
+function sortFn(a, b) {
+  const s = state.sort;
+  if (s === 'name') return a.name.localeCompare(b.name);
+  if (s === '-added') return b.added - a.added;
+  if (s === 'added') return a.added - b.added;
+  if (s === '-size') return b.size_mb - a.size_mb;
+  return a.size_mb - b.size_mb;
+}
+
+// ─── DOM BUILDERS ────────────────────────────────────────────────────────
+function buildChips(items, stateSet) {
+  return items.length === 0 ? '' : items.map(({value, count}) => 
+    `<button class="chip ${stateSet.has(value) ? 'active' : ''}" data-val="${escapeHtml(value)}">
+      ${escapeHtml(value)} · ${count}
+    </button>`
+  ).join('');
+}
+
+function getAppBadge(type) {
+  const apps = {
+    'psd': { bg: '#31a8ff', color: '#001d36', label: 'Photoshop' },
+    'ai': { bg: '#ff9a00', color: '#330000', label: 'Illustrator' },
+    'ae': { bg: '#9999ff', color: '#00005b', label: 'After Effects' },
+    'pr': { bg: '#9999ff', color: '#00005b', label: 'Premiere' },
+    'xd': { bg: '#ff61f6', color: '#4a0045', label: 'XD' },
+    'fig': { bg: '#f24e1e', color: '#fff', label: 'Figma' },
+    'sketch': { bg: '#ffb387', color: '#4a0000', label: 'Sketch' },
+    'pdf': { bg: '#f40f02', color: '#fff', label: 'PDF' },
+    'otf': { bg: '#2f2f2f', color: '#fff', label: 'Font File' },
+    'ttf': { bg: '#2f2f2f', color: '#fff', label: 'Font File' },
+    'mp4': { bg: '#000', color: '#fff', label: 'Video' },
+    'mov': { bg: '#000', color: '#fff', label: 'Video' }
+  };
+  const a = apps[type.toLowerCase()];
+  if (!a) return '';
+  return `<span class="app-badge" style="background:${a.bg}; color:${a.color}">${a.label}</span>`;
+}
+
+function renderFilters() {
+  const counts = { cats: {}, types: {}, tags: {}, usedIn: {} };
+  DATA.forEach(b => {
+    counts.cats[b.category] = (counts.cats[b.category] || 0) + 1;
+    b.types.forEach(t => counts.types[t] = (counts.types[t] || 0) + 1);
+  });
+  Object.values(userData).forEach(u => {
+    (u.tags || []).forEach(t => counts.tags[t] = (counts.tags[t] || 0) + 1);
+    (u.used_in || []).forEach(t => counts.usedIn[t] = (counts.usedIn[t] || 0) + 1);
+  });
+  
+  const mapC = (obj) => Object.keys(obj).sort().map(k => ({value: k, count: obj[k]}));
+  
+  document.getElementById('row-cats').innerHTML = buildChips(mapC(counts.cats), state.cats);
+  document.getElementById('row-types').innerHTML = buildChips(mapC(counts.types), state.types);
+  document.getElementById('row-tags').innerHTML = buildChips(mapC(counts.tags), state.tags);
+  document.getElementById('row-used').innerHTML = buildChips(mapC(counts.usedIn), state.usedIn);
+
+  const activeFilters = [
+    ...[...state.cats].map(v => ({ kind: 'cats', label: v })),
+    ...[...state.types].map(v => ({ kind: 'types', label: '.' + v })),
+    ...[...state.tags].map(v => ({ kind: 'tags', label: '# ' + v })),
+    ...[...state.usedIn].map(v => ({ kind: 'usedIn', label: '↪ ' + v })),
+  ];
+  if (state.search) activeFilters.push({ kind: 'search', label: `“${state.search}”` });
+
+  const activeHTML = activeFilters.map(f => {
+    const rawVal = f.label.replace(/^[.#“↪] |[”]/g, '');
+    return `<button class="chip active filter-clear" data-kind="${f.kind}" data-val="${escapeHtml(rawVal)}">${escapeHtml(f.label)} <span class="x">×</span></button>`;
+  }).join('');
+
+  document.getElementById('active-filters').innerHTML = activeHTML + (activeFilters.length ? `<button class="clear" id="clear-all">Clear all</button>` : '');
+  document.getElementById('visible-count').textContent = window.currentMatches.length;
+}
+
+function getGridHTML() {
+  window.currentMatches = DATA.filter(passes).sort(sortFn);
+
+  return `
+    <header>
+      <div class="title-row">
+        <div>
+          <h1>__PROJECT__ <span class="version-badge">v9 - Final Polish</span></h1>
+          <div class="meta"><span id="visible-count">${window.currentMatches.length}</span> of __COUNT__ bundles · last indexed __GENERATED__</div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span class="save-status" id="save-status"></span>
+          <button class="btn ghost" id="btn-shortcuts">⌨️ Shortcuts</button>
+          <button class="btn ghost" id="btn-export">Export tags</button>
+        </div>
+      </div>
+      <div class="controls">
+        <input type="search" id="search-input" value="${escapeHtml(state.search)}" placeholder="Search... (Press / to focus)" autofocus>
+        <div class="view-toggles">
+          <button class="btn ${state.listType==='grid'?'active':''}" data-view="grid" title="Grid View">⊞</button>
+          <button class="btn ${state.listType==='compact'?'active':''}" data-view="compact" title="Compact View">▦</button>
+          <button class="btn ${state.listType==='list'?'active':''}" data-view="list" title="List View">☰</button>
+        </div>
+        <select id="sort-select">
+          <option value="name" ${state.sort==='name'?'selected':''}>Sort · A → Z</option>
+          <option value="-added" ${state.sort==='-added'?'selected':''}>Sort · recently added</option>
+          <option value="added" ${state.sort==='added'?'selected':''}>Sort · oldest first</option>
+          <option value="-size" ${state.sort==='-size'?'selected':''}>Sort · largest first</option>
+          <option value="size" ${state.sort==='size'?'selected':''}>Sort · smallest first</option>
+        </select>
+      </div>
+      <div class="chip-row filter-row" id="row-cats" data-kind="cats"></div>
+      <div class="chip-row filter-row" id="row-types" data-kind="types"></div>
+      <div class="chip-row filter-row" id="row-tags" data-kind="tags"></div>
+      <div class="chip-row filter-row" id="row-used" data-kind="usedIn"></div>
+      <div class="active-filters" id="active-filters"></div>
+    </header>
+    <main>
+      <div id="grid-container" class="view-${state.listType}">
+        ${window.currentMatches.map(b => {
+          let thumb;
+          if (b.thumbs.length) {
+             const tArr = escapeHtml(JSON.stringify(b.thumbs.map(t=>t.url)));
+             const cycleCls = b.thumbs.length > 1 ? 'cycle-img' : '';
+             thumb = `<img loading="lazy" src="${b.thumbs[0].url}" class="${cycleCls}" data-thumbs="${tArr}" data-idx="0">`;
+          } else {
+             thumb = `<div class="empty-thumb">
+               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+               <span>No Preview</span>
+             </div>`;
+          }
+          
+          const u = ud(b.id);
+          const tp = (u.tags||[]).slice(0,3).map(t=>`<span class="pill tag-pill"># ${escapeHtml(t)}</span>`).join('');
+          return `<div class="card" data-id="${b.id}" tabindex="0">
+            <div class="thumb">${thumb}${b.thumbs.length>1?`<span class="thumb-count">+${b.thumbs.length-1}</span>`:''}</div>
+            <div class="body">
+              <div class="name">${escapeHtml(b.name)}</div>
+              <div class="row">
+                <span class="cat-pill">${escapeHtml(b.category)}</span>
+                ${b.types.slice(0,3).map(t=>`<span class="pill">${t}</span>`).join('')}
+              </div>
+              <div class="row">${b.file_count} files · ${b.size_mb} MB</div>
+              ${tp?`<div class="row">${tp}</div>`:''}
+            </div>
+          </div>`;
+        }).join('') || '<div class="empty-state" style="grid-column:1/-1">Nothing matches your search.</div>'}
+      </div>
+    </main>
+  `;
+}
+
+function getDetailHTML() {
+  const b = DATA.find(x => x.id === state.activeId);
+  if (!b) return '';
+  const u = ud(b.id);
+  
+  const tagsHtml = (u.tags||[]).map((t,i) => `<span class="chip">${escapeHtml(t)} <span class="x del-tag" data-idx="${i}">×</span></span>`).join('');
+  const usedHtml = (u.used_in||[]).map((t,i) => `<span class="chip">${escapeHtml(t)} <span class="x del-used" data-idx="${i}">×</span></span>`).join('');
+  const appBadges = b.types.map(getAppBadge).join('');
+
+  return `
+    <div class="detail-nav">
+      <button class="btn ghost" id="back-btn" style="padding-left:0">← Back</button>
+      <div class="hints">Keys: [←][→] Next/Prev · [F] Finder · [C] Copy · [T] Tags · [Esc] Back</div>
+    </div>
+    <div class="detail-content">
+      <div class="detail-header-text">
+        <h2>${escapeHtml(b.name)}</h2>
+        <div class="meta">${b.category} · ${b.file_count} files · ${b.size_mb} MB</div>
+        ${appBadges ? `<div class="badges-container">${appBadges}</div>` : ''}
+      </div>
+      <div class="detail-actions">
+        <button class="btn primary" id="btn-reveal">Reveal in Finder [F]</button>
+        <button class="btn" id="btn-copy">Copy path [C]</button>
+      </div>
+      <div class="gallery">
+        ${b.thumbs.map(t => `<a href="#" class="gal-link" data-src="${escapeHtml(t.source)}"><img loading="lazy" src="${t.url}"></a>`).join('')}
+      </div>
+      <div class="section"><h3>Tags</h3><div class="tag-editor">${tagsHtml}<input type="text" id="add-tag" class="pill-input" placeholder="Add tag..."></div></div>
+      <div class="section"><h3>Used In</h3><div class="tag-editor">${usedHtml}<input type="text" id="add-used" class="pill-input" placeholder="e.g. v1.0 / Hero..."></div></div>
+      <div class="section"><h3>Notes</h3><textarea id="notes-input" placeholder="Add notes...">${escapeHtml(u.notes||'')}</textarea></div>
+      <div class="section">
+        <button class="files-toggle" id="files-toggle">Show files (${b.file_count}) ▾</button>
+        <ul class="file-list" id="file-list">${b.files.map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul>
+      </div>
+    </div>
+  `;
+}
+
+// ─── RENDER ENGINE ───────────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = state.view === 'grid' ? getGridHTML() : getDetailHTML();
+  
+  if (!SERVED && state.view === 'grid') {
+    const st = document.getElementById('save-status');
+    if(st) { st.textContent = 'Tip: open via open-index.command for native Finder reveal.'; st.classList.add('dirty'); }
+  }
+
+  if (state.view === 'grid') {
+    renderFilters();
+
+    // Context Memory: Restore scroll position and focus
+    if (lastActiveId) {
+      requestAnimationFrame(() => {
+        const card = document.querySelector(`.card[data-id="${lastActiveId}"]`);
+        if (card) {
+          card.focus({ preventScroll: true });
+          card.scrollIntoView({ behavior: 'auto', block: 'center' });
+        }
+        lastActiveId = null;
+      });
+    }
+
+    document.getElementById('search-input')?.addEventListener('input', e => { state.search = e.target.value; render(); });
+    document.getElementById('sort-select')?.addEventListener('change', e => { state.sort = e.target.value; render(); });
+    document.getElementById('btn-shortcuts')?.addEventListener('click', () => document.getElementById('shortcuts-modal').showModal());
+    document.getElementById('export-btn')?.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' }));
+      a.download = 'tags.json'; a.click();
+    });
+    document.getElementById('clear-all')?.addEventListener('click', () => {
+      state.search=''; state.cats.clear(); state.types.clear(); state.tags.clear(); state.usedIn.clear(); render();
+    });
+    
+    document.querySelectorAll('.view-toggles .btn').forEach(btn => {
+      btn.addEventListener('click', e => { state.listType = e.target.dataset.view; render(); });
+    });
+
+    document.getElementById('grid-container').addEventListener('click', e => {
+      const card = e.target.closest('.card');
+      if (card) { state.activeId = card.dataset.id; window.scrollTo(0,0); setView('detail'); }
+    });
+  } 
+  else {
+    const b = DATA.find(x => x.id === state.activeId);
+    document.getElementById('back-btn').addEventListener('click', () => { lastActiveId = state.activeId; setView('grid'); });
+    document.getElementById('btn-reveal').addEventListener('click', () => osOpen(b.abs_path, true));
+    document.getElementById('btn-copy').addEventListener('click', () => copy(b.abs_path));
+    document.querySelectorAll('.gal-link').forEach(el => el.addEventListener('click', e => { e.preventDefault(); osOpen(el.dataset.src); }));
+    
+    const u = ud(b.id);
+    document.getElementById('notes-input').addEventListener('input', e => { u.notes = e.target.value; saveUserData(); });
+    document.getElementById('files-toggle').addEventListener('click', e => {
+      const fl = document.getElementById('file-list');
+      const open = fl.classList.toggle('open');
+      e.target.textContent = open ? `Hide files ▴` : `Show files (${b.file_count}) ▾`;
+    });
+
+    const handleEnter = (e, arr) => {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault(); const v = e.target.value.trim();
+        if (v && !arr.includes(v)) { arr.push(v); saveUserData(); render(); }
+      }
+    };
+    document.getElementById('add-tag').addEventListener('keydown', e => handleEnter(e, u.tags));
+    document.getElementById('add-used').addEventListener('keydown', e => handleEnter(e, u.used_in));
+    
+    document.querySelectorAll('.del-tag').forEach(el => el.addEventListener('click', e => { u.tags.splice(e.target.dataset.idx, 1); saveUserData(); render(); }));
+    document.querySelectorAll('.del-used').forEach(el => el.addEventListener('click', e => { u.used_in.splice(e.target.dataset.idx, 1); saveUserData(); render(); }));
+  }
+}
+
+function setView(viewMode) {
+  state.view = viewMode;
+  render();
+}
+
+// ─── EVENT DELEGATION FOR FILTERS ──────────────────────────────────────
+document.addEventListener('click', e => {
+  if (e.target.closest('.filter-clear')) {
+    const kind = e.target.closest('.filter-clear').dataset.kind;
+    if (kind === 'search') { state.search = ''; document.getElementById('search-input').value = ''; }
+    else state[kind].delete(e.target.closest('.filter-clear').dataset.val);
+    render();
+  } else if (e.target.closest('.chip') && e.target.closest('.filter-row')) {
+    const kind = e.target.closest('.filter-row').dataset.kind;
+    const val = e.target.closest('.chip').dataset.val;
+    state[kind].has(val) ? state[kind].delete(val) : state[kind].add(val);
+    render();
+  }
+});
+
+// ─── THUMBNAIL CYCLING ─────────────────────────────────────────────────
+// Global background slow-cycle (Every 2.5s)
+setInterval(() => {
+  if (state.view !== 'grid') return;
+  document.querySelectorAll('.cycle-img:not(:hover)').forEach(img => {
+    let thumbs = JSON.parse(img.dataset.thumbs);
+    let curIdx = parseInt(img.dataset.idx || 0);
+    let nextIdx = (curIdx + 1) % thumbs.length;
+    img.dataset.idx = nextIdx;
+    img.src = thumbs[nextIdx];
+  });
+}, 2500);
+
+// Hover hyper-cycle (Every 500ms)
+document.addEventListener('mouseover', e => {
+  if(e.target.classList.contains('cycle-img')) {
+    let img = e.target;
+    let thumbs = JSON.parse(img.dataset.thumbs);
+    img.hoverInterval = setInterval(() => {
+      let curIdx = parseInt(img.dataset.idx || 0);
+      let nextIdx = (curIdx + 1) % thumbs.length;
+      img.dataset.idx = nextIdx;
+      img.src = thumbs[nextIdx];
+    }, 500);
+  }
+});
+document.addEventListener('mouseout', e => {
+  if(e.target.classList.contains('cycle-img') && e.target.hoverInterval) {
+    clearInterval(e.target.hoverInterval);
+  }
+});
+
+// ─── ROBUST SPATIAL KEYBOARD NAV ───────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+    if (e.key === 'Escape') e.target.blur();
+    return;
+  }
+
+  if (e.key === '?') { e.preventDefault(); document.getElementById('shortcuts-modal').showModal(); return; }
+
+  if (state.view === 'grid') {
+    if (e.key === '/') { e.preventDefault(); document.getElementById('search-input')?.focus(); return; }
+    
+    const cards = Array.from(document.querySelectorAll('.card'));
+    if (!cards.length) return;
+    
+    let idx = cards.indexOf(document.activeElement);
+    
+    if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      e.preventDefault();
+      if (idx === -1) { cards[0].focus(); return; }
+      
+      let cols = 1;
+      if (state.listType !== 'list') {
+        cols = cards.filter(c => c.offsetTop === cards[0].offsetTop).length || 1;
+      }
+
+      if (e.key === 'ArrowRight') idx++;
+      if (e.key === 'ArrowLeft') idx--;
+      if (e.key === 'ArrowDown') idx += cols;
+      if (e.key === 'ArrowUp') idx -= cols;
+
+      if (idx < 0) idx = 0;
+      if (idx >= cards.length) idx = cards.length - 1;
+      cards[idx].focus({ preventScroll: true });
+      cards[idx].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+      
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      if (idx !== -1) { e.preventDefault(); cards[idx].click(); }
+    }
+  } 
+  else if (state.view === 'detail') {
+    const idx = window.currentMatches.findIndex(b => b.id === state.activeId);
+    
+    if (e.key === 'Escape') {
+      document.getElementById('back-btn')?.click();
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (idx !== -1 && idx < window.currentMatches.length - 1) {
+        state.activeId = window.currentMatches[idx + 1].id;
+        render(); window.scrollTo(0,0);
+      }
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (idx > 0) {
+        state.activeId = window.currentMatches[idx - 1].id;
+        render(); window.scrollTo(0,0);
+      }
+    } else if (e.key.toLowerCase() === 'f') {
+      e.preventDefault(); document.getElementById('btn-reveal')?.click();
+    } else if (e.key.toLowerCase() === 'c') {
+      e.preventDefault(); document.getElementById('btn-copy')?.click();
+    } else if (e.key.toLowerCase() === 't') {
+      e.preventDefault(); document.getElementById('add-tag')?.focus();
+    } else if (e.key.toLowerCase() === 'n') {
+      e.preventDefault(); document.getElementById('notes-input')?.focus();
+    }
+  }
+});
+
+setView('grid');
+</script>
+</body>
+</html>
