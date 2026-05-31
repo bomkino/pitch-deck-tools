@@ -1,0 +1,39 @@
+# macOS / local noise
+.DS_Store
+Icon?
+__pycache__/
+*.pyc
+
+# Private client/project material
+private/
+
+# Deck prototyper local working state
+tools/deck-prototyper/_media/
+tools/deck-prototyper/Export/
+tools/deck-prototyper/deck-copy.txt
+tools/deck-prototyper/manifest.json
+tools/deck-prototyper/prototyper-log.txt
+
+# Asset browser generated output and local data
+tools/asset-browser/_index/index.html
+tools/asset-browser/_index/thumbs/
+tools/asset-browser/_index/fonts-to-install/
+tools/asset-browser/_index/fonts-report.txt
+tools/asset-browser/_index/tags.json
+tools/asset-browser/_index/_scripts/live-updates.log
+
+# Common private media and font files
+*.otf
+*.ttf
+*.woff
+*.woff2
+*.psd
+*.ai
+*.eps
+*.tif
+*.tiff
+*.mp4
+*.mov
+*.m4v
+*.webm
+
