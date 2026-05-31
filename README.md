@@ -20,6 +20,16 @@ This is early and messy in places. That is part of the point.
 | Font Previewer | `tools/font-previewer` | Creates large visual boards from dropped font files so you can compare type quickly. |
 | Deck Prototyper | `tools/deck-prototyper` | Local browser app for script, media curation, slide assembly, and visual export. |
 
+## Who This Helps
+
+This project is for people who need to make a pitch deck but cannot afford a professional deck team yet:
+
+- founders preparing an investor deck
+- filmmakers and producers making pitch materials
+- students and first-time creators learning how decks work
+- small teams who need better visual organization
+- deck makers who want faster local tools for messy early-stage work
+
 ## Mac-first
 
 This project is being built for macOS first. Some tools currently rely on Mac utilities like `open`, `sips`, `qlmanage`, and LaunchAgents.
