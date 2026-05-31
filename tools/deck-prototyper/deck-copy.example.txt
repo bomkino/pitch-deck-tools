@@ -1,0 +1,15 @@
+=== 1 ===
+HEAD: Working Title
+SUB: A simple sample deck
+BODY: This is placeholder copy for a fresh open-source clone.
+
+=== 2 ===
+HEAD: The Problem
+SUB: What needs to change
+BODY: Pitch deck makers often need to move quickly from rough words and messy references into a clear visual direction.
+
+=== 3 ===
+HEAD: The Tool
+SUB: Script, curation, assembly, export
+BODY: This prototype is a local workspace for testing deck copy, assigning visual references, and exporting draft frames.
+

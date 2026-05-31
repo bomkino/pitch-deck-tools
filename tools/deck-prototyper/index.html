@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Pitch.dog Prototyper</title>
+        <link
+            rel="icon"
+            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ff477e'/></svg>"
+        />
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <span
+                    style="
+                        font-weight: 700;
+                        letter-spacing: -0.05em;
+                        font-size: 16px;
+                    "
+                    >pitch.dog</span
+                >
+            </div>
+            <div class="phase-switcher">
+                <button class="phase-btn active" data-target="view-script">
+                    1. Script
+                </button>
+                <button class="phase-btn" data-target="view-curation">
+                    2. Curation
+                </button>
+                <button class="phase-btn" data-target="view-assembly">
+                    3. Assembly
+                </button>
+                <button class="phase-btn" data-target="view-export">
+                    4. Export
+                </button>
+            </div>
+            <div class="status-bar">
+                <input
+                    type="text"
+                    id="project-input"
+                    class="version-input"
+                    style="width: 140px; text-align: left"
+                    value="Project"
+                    placeholder="Project Name"
+                />
+                <input
+                    type="text"
+                    id="version-input"
+                    class="version-input"
+                    value="v1.0"
+                    placeholder="Version"
+                />
+                <span id="save-status">All changes saved</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- PRINT CONTAINER -->
+            <div id="print-container"></div>
+
+            <!-- TAB 1: SCRIPT -->
+            <section id="view-script" class="view-layer active">
+                <div class="main-area">
+                    <div class="area-header">
+                        <div
+                            style="
+                                display: flex;
+                                align-items: center;
+                                gap: 12px;
+                            "
+                        >
+                            <h2>Script &amp; Layout Intent</h2>
+                            <span class="meta-text help-pill"
+                                >Press ? for Help</span
+                            >
+                        </div>
+                        <button
+                            id="btn-sync-script"
+                            class="btn primary-btn btn-sync"
+                        >
+                            Sync to File
+                        </button>
+                    </div>
+                    <div
+                        id="text-editor-grid"
+                        class="scroll-area script-grid padding-area"
+                    ></div>
+                </div>
+            </section>
+
+            <!-- TAB 2: CURATION (GRID LEFT, SIDEBAR RIGHT) -->
+            <section id="view-curation" class="view-layer">
+                <div class="main-area media-area">
+                    <div class="curation-header">
+                        <div class="curation-top-row">
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 12px;
+                                "
+                            >
+                                <h2>Media Library</h2>
+                                <span
+                                    id="media-count"
+                                    class="meta-text count-pill"
+                                    >0 files</span
+                                >
+                            </div>
+                            <div class="curation-controls">
+                                <label>Zoom (+/-)</label>
+                                <input
+                                    type="range"
+                                    id="thumb-slider"
+                                    min="150"
+                                    max="600"
+                                    value="250"
+                                />
+                            </div>
+                        </div>
+                        <div class="curation-filters">
+                            <input
+                                type="text"
+                                id="search-input"
+                                class="search-bar"
+                                placeholder="Search media..."
+                            />
+                            <div class="filter-group">
+                                <button
+                                    class="filter-btn active"
+                                    data-filter="all"
+                                >
+                                    All
+                                </button>
+                                <button
+                                    class="filter-btn"
+                                    data-filter="shortlist"
+                                >
+                                    Shortlist
+                                </button>
+                                <button
+                                    class="filter-btn"
+                                    data-filter="starred"
+                                >
+                                    Starred
+                                </button>
+                                <button
+                                    class="filter-btn"
+                                    data-filter="slotted"
+                                >
+                                    Slotted
+                                </button>
+                                <button class="filter-btn" data-filter="unused">
+                                    Unused
+                                </button>
+                            </div>
+                            <select
+                                id="folder-filter"
+                                class="search-bar custom-select"
+                            ></select>
+                            <select
+                                id="type-filter"
+                                class="search-bar custom-select"
+                            ></select>
+                        </div>
+                    </div>
+                    <div
+                        id="media-grid"
+                        class="media-grid scroll-area"
+                        style="--thumb-size: 250px"
+                    ></div>
+                </div>
+
+                <div
+                    class="sidebar nav-sidebar"
+                    style="
+                        width: 320px;
+                        border-left: 1px solid var(--border);
+                        border-right: none;
+                    "
+                >
+                    <div class="sidebar-header"><h2>Script Reference</h2></div>
+                    <div
+                        id="curation-sidebar-script"
+                        class="scroll-area"
+                        style="padding: 16px"
+                    ></div>
+                </div>
+            </section>
+
+            <!-- TAB 3: ASSEMBLY (CANVAS LEFT, SIDEBARS RIGHT) -->
+            <section id="view-assembly" class="view-layer">
+                <div class="main-area studio-area">
+                    <div class="canvas-wrapper" id="canvas-wrapper">
+                        <canvas
+                            id="assembly-canvas"
+                            width="2576"
+                            height="1080"
+                            class="html5-canvas"
+                        ></canvas>
+                    </div>
+                </div>
+
+                <div
+                    class="sidebars-wrapper"
+                    style="
+                        display: flex;
+                        width: 660px;
+                        border-left: 1px solid var(--border);
+                    "
+                >
+                    <div
+                        class="sidebar nav-sidebar"
+                        style="
+                            width: 320px;
+                            border-right: 1px solid var(--border);
+                        "
+                    >
+                        <div class="sidebar-header"><h2>Slides</h2></div>
+                        <div
+                            id="slide-nav"
+                            class="scroll-area"
+                            style="padding: 12px"
+                        ></div>
+                    </div>
+
+                    <div
+                        class="sidebar inspector-sidebar"
+                        style="width: 340px; border-left: none"
+                    >
+                        <div class="sidebar-header"><h2>Inspector</h2></div>
+                        <div class="scroll-area padding-area">
+                            <div
+                                class="inspector-group"
+                                style="margin-bottom: 24px"
+                            >
+                                <label>Active Control Layer</label>
+                                <div style="display: flex; gap: 8px">
+                                    <button
+                                        class="btn active-btn"
+                                        id="btn-layer-media"
+                                    >
+                                        🖼️ Media
+                                    </button>
+                                    <button class="btn" id="btn-layer-text">
+                                        📝 Text
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="inspector-group">
+                                <label>Canvas Settings</label>
+                                <div
+                                    style="
+                                        display: flex;
+                                        gap: 16px;
+                                        margin-bottom: 16px;
+                                    "
+                                >
+                                    <label
+                                        style="
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 6px;
+                                            cursor: pointer;
+                                            color: var(--text-main);
+                                            font-size: 12px;
+                                            font-weight: 500;
+                                        "
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            id="ctrl-show-grid"
+                                            style="width: 16px; height: 16px"
+                                        />
+                                        Show Grid Overlay
+                                    </label>
+                                    <label
+                                        style="
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 6px;
+                                            cursor: pointer;
+                                            color: var(--text-main);
+                                            font-size: 12px;
+                                            font-weight: 500;
+                                        "
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            id="ctrl-snap-grid"
+                                            style="width: 16px; height: 16px"
+                                        />
+                                        Snap Align
+                                    </label>
+                                </div>
+                                <button
+                                    class="btn"
+                                    id="btn-reset-pos"
+                                    style="width: 100%"
+                                >
+                                    Reset Positions
+                                </button>
+                            </div>
+
+                            <div class="inspector-group" id="panel-media">
+                                <label>Image Framing (Full Bleed)</label>
+                                <div
+                                    style="
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        margin-bottom: 12px;
+                                    "
+                                >
+                                    <span class="meta-text" style="width: 40px"
+                                        >Scale</span
+                                    >
+                                    <input
+                                        type="range"
+                                        id="ctrl-scale"
+                                        min="20"
+                                        max="150"
+                                        value="100"
+                                        style="flex: 1"
+                                    />
+                                    <span
+                                        id="lbl-scale"
+                                        class="meta-text"
+                                        style="width: 30px"
+                                        >100%</span
+                                    >
+                                </div>
+                                <label
+                                    style="
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        cursor: pointer;
+                                        color: var(--text-main);
+                                        font-size: 12px;
+                                        font-weight: 500;
+                                    "
+                                >
+                                    <input
+                                        type="checkbox"
+                                        id="ctrl-flip"
+                                        style="width: 16px; height: 16px"
+                                    />
+                                    Mirror Horizontal
+                                </label>
+                            </div>
+
+                            <div
+                                class="inspector-group"
+                                id="panel-text"
+                                style="display: none"
+                            >
+                                <label>Text Container Width</label>
+                                <div
+                                    style="
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                    "
+                                >
+                                    <span class="meta-text" style="width: 40px"
+                                        >Width</span
+                                    >
+                                    <input
+                                        type="range"
+                                        id="ctrl-text-width"
+                                        min="800"
+                                        max="2400"
+                                        step="50"
+                                        value="1600"
+                                        style="flex: 1"
+                                    />
+                                    <span
+                                        id="lbl-text-width"
+                                        class="meta-text"
+                                        style="width: 40px"
+                                        >1600px</span
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="inspector-group">
+                                <label>Designer Notes</label>
+                                <textarea
+                                    id="slide-notes"
+                                    placeholder="e.g., Expand left edge by 1200px..."
+                                ></textarea>
+                            </div>
+
+                            <div class="inspector-group">
+                                <div
+                                    style="
+                                        display: flex;
+                                        border-bottom: 1px solid var(--border);
+                                        margin-bottom: 12px;
+                                    "
+                                >
+                                    <button
+                                        class="btn primary-btn"
+                                        style="
+                                            border-radius: 0;
+                                            background: transparent;
+                                            color: var(--accent);
+                                            border-bottom: 2px solid
+                                                var(--accent);
+                                        "
+                                        id="tab-mains"
+                                    >
+                                        Mains
+                                    </button>
+                                    <button
+                                        class="btn primary-btn"
+                                        style="
+                                            border-radius: 0;
+                                            background: transparent;
+                                            color: var(--text-muted);
+                                        "
+                                        id="tab-backups"
+                                    >
+                                        Backups
+                                    </button>
+                                </div>
+                                <div
+                                    id="inspector-mains-area"
+                                    class="assembly-backups"
+                                ></div>
+                                <div
+                                    id="inspector-backups-area"
+                                    class="assembly-backups"
+                                    style="display: none"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: EXPORT -->
+            <section id="view-export" class="view-layer">
+                <div class="main-area center-area">
+                    <div class="export-card" style="max-width: 600px">
+                        <h2>Export Pipeline</h2>
+                        <p style="margin-bottom: 24px">
+                            Files will be packaged into
+                            <strong>/Export</strong> under your active Project &
+                            Version name.
+                        </p>
+
+                        <div
+                            style="
+                                display: flex;
+                                flex-direction: column;
+                                gap: 12px;
+                                margin-top: 16px;
+                                text-align: left;
+                            "
+                        >
+                            <button
+                                id="btn-export-media"
+                                class="btn primary-btn large-btn"
+                            >
+                                1. Package Media Files
+                            </button>
+                            <p
+                                class="meta-text"
+                                style="margin-bottom: 16px; text-align: center"
+                            >
+                                Copies all Mains and Backups into isolated
+                                folders.
+                            </p>
+
+                            <button
+                                id="btn-export-visuals"
+                                class="btn large-btn"
+                                style="background: var(--bg-hover)"
+                            >
+                                2. Render Visual Deck (High-Res JPGs & PDF)
+                            </button>
+                            <p
+                                class="meta-text"
+                                style="margin-bottom: 16px; text-align: center"
+                            >
+                                Bypasses browser print. Saves 2576x1080 canvas
+                                frames directly to disk.
+                            </p>
+
+                            <button
+                                id="btn-export-specs"
+                                class="btn large-btn"
+                                style="background: var(--bg-hover)"
+                            >
+                                3. Print Spec Sheet
+                            </button>
+                            <p class="meta-text" style="text-align: center">
+                                Generates the detailed instruction sheets via
+                                browser print dialog.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- LIGHTBOX -->
+        <div id="lightbox" class="lightbox">
+            <div class="lb-main">
+                <img id="lb-img" src="" alt="preview" />
+                <div id="lb-badge-container" class="lb-badges"></div>
+                <div id="lb-meta" class="lb-meta"></div>
+            </div>
+            <div class="lb-sidebar">
+                <div class="lb-sidebar-header">
+                    <h3>Assign to Slide</h3>
+                    <span class="meta-text"
+                        >Press M for Main, B for Backup</span
+                    >
+                </div>
+                <div id="lb-slots" class="scroll-area lb-slots-area"></div>
+            </div>
+            <button id="lb-close" class="lb-close">&times;</button>
+        </div>
+
+        <!-- HELP MODAL -->
+        <dialog id="help-modal" class="modal">
+            <h3>Keyboard Shortcuts</h3>
+            <div class="shortcut-grid">
+                <kbd>?</kbd> <span>Toggle this help menu</span>
+                <kbd>Arrows</kbd> <span>Navigate media grid</span>
+                <kbd>Space</kbd> <span>Preview in Lightbox</span> <kbd>S</kbd>
+                <span>Toggle 'Shortlist' tag</span> <kbd>1-5</kbd>
+                <span>Assign Star Rating</span> <kbd>M</kbd>
+                <span>Assign as Main to Sidebar target slide</span> <kbd>B</kbd>
+                <span>Assign as Backup to Sidebar target slide</span>
+                <kbd>I / T</kbd>
+                <span>Tab 3: Switch to Media / Text Layer</span> <kbd>R</kbd>
+                <span>Tab 3: Reset Layer Positions</span> <kbd>Esc</kbd>
+                <span>Close Lightbox / Menus</span>
+            </div>
+            <button
+                class="btn primary-btn"
+                style="margin-top: 24px"
+                onclick="document.getElementById('help-modal').close()"
+            >
+                Got it
+            </button>
+        </dialog>
+
+        <!-- CONTEXT MENU -->
+        <div id="context-menu" class="context-menu">
+            <div class="cm-item" id="cm-shortlist">
+                Toggle Shortlist <span>S</span>
+            </div>
+            <div class="cm-item has-sub">
+                Assign Star...
+                <div class="cm-submenu">
+                    <div class="cm-item" data-star="1">1 Star</div>
+                    <div class="cm-item" data-star="3">3 Stars</div>
+                    <div class="cm-item" data-star="5">5 Stars</div>
+                </div>
+            </div>
+            <div class="cm-divider"></div>
+            <div class="cm-item has-sub">
+                Set as Main...
+                <div class="cm-submenu slide-submenu" id="cm-main-slides"></div>
+            </div>
+            <div class="cm-item has-sub">
+                Set as Backup...
+                <div
+                    class="cm-submenu slide-submenu"
+                    id="cm-backup-slides"
+                ></div>
+            </div>
+        </div>
+
+        <script src="app.js"></script>
+    </body>
+</html>
