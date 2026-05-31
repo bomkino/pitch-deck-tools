@@ -20,6 +20,20 @@ This is early and messy in places. That is part of the point.
 | Font Previewer | `tools/font-previewer` | Creates large visual boards from dropped font files so you can compare type quickly. |
 | Deck Prototyper | `tools/deck-prototyper` | Local browser app for script, media curation, slide assembly, and visual export. |
 
+## Screenshots
+
+### Asset Browser
+
+![Asset Browser showing a searchable local asset index](docs/images/asset-browser.svg)
+
+### Font Previewer
+
+![Font Previewer showing a drop zone for font files](docs/images/font-previewer.svg)
+
+### Deck Prototyper
+
+![Deck Prototyper showing sample pitch deck cards](docs/images/deck-prototyper.svg)
+
 ## Who This Helps
 
 This project is for people who need to make a pitch deck but cannot afford a professional deck team yet:
