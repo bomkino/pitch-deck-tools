@@ -1,6 +1,6 @@
 # Pitch Deck Tools
 
-Mac-first, local tools for people who want to make better pitch decks.
+Mac-first, local tools by pitch.dog for people who want to make better pitch decks.
 
 This is one open-source project with three early tools:
 
@@ -8,7 +8,7 @@ This is one open-source project with three early tools:
 - **Font Previewer**: drop in font files and generate quick type boards for deck typography exploration.
 - **Deck Prototyper**: turn rough copy, reference images, and layout choices into quick visual pitch-deck frames.
 
-I am using this project to learn coding and GitHub in public, on a real project. The bigger goal is to help pitch deck makers who cannot afford a professional deck team make stronger decks on their own. It should also help professional teams move faster, so the project can be useful on both sides.
+We are using this project to learn coding and GitHub in public, on a real project. The bigger goal is to help pitch deck makers who cannot afford pitch.dog, or another professional deck team, make stronger decks on their own. We also want these tools for our own work, because anything that helps the community make better decks can also help us make decks faster.
 
 This is early and messy in places. That is part of the point.
 
@@ -54,4 +54,3 @@ Each tool folder has its own README.
 This is an active learning project and a real production-adjacent toolkit. Expect rough edges, simple code, and frequent changes.
 
 See [docs/roadmap.md](docs/roadmap.md) for the direction.
-
