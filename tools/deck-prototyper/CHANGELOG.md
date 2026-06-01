@@ -1,5 +1,15 @@
 # Deck Prototyper Changelog
 
+## v0.5.0 - 2026-06-01
+
+- Added an Assembly toggle to show the selected image edge while framing media.
+- Added fit-width, fit-height, and edge alignment controls for the active media slot.
+- Renamed Reset Project to New Project and kept the backup-first reset behavior.
+- Made Script tab sync wording explicit with Sync from File and Sync to File.
+- Added slide deletion from the Script tab.
+- Improved slide drag/drop feedback with before/after drop indicators.
+- Added Linux-friendly startup options with `PORT` and `PROTOTYPER_OPEN_BROWSER`.
+
 ## v0.4.0 - 2026-06-01
 
 - Added explicit Assembly media slots for full-bleed and split layouts so slide media is no longer just an ambiguous mains list.

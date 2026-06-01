@@ -310,11 +310,50 @@ main {
 .outline-slide.is-dragging,
 .nav-slide-card.is-dragging {
     opacity: 0.45;
+    transform: scale(0.985);
 }
 .outline-slide.is-drop-target,
 .nav-slide-card.is-drop-target {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
+    outline: 1px solid rgba(255, 71, 126, 0.45);
+    outline-offset: 2px;
+    position: relative;
+}
+.outline-slide.is-drop-target::before,
+.nav-slide-card.is-drop-target::before,
+.outline-slide.is-drop-target::after,
+.nav-slide-card.is-drop-target::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 18px rgba(255, 71, 126, 0.55);
+}
+.outline-slide.drop-before::before,
+.nav-slide-card.drop-before::before {
+    top: -8px;
+}
+.outline-slide.drop-after::after,
+.nav-slide-card.drop-after::after {
+    bottom: -8px;
+}
+.drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 20px;
+    margin-right: 6px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-muted);
+    cursor: grab;
+    font-size: 11px;
+}
+.drag-handle:active {
+    cursor: grabbing;
 }
 .drag-handle {
     color: var(--text-muted);
@@ -370,6 +409,13 @@ main {
 .mini-btn:disabled {
     opacity: 0.35;
     cursor: default;
+}
+.danger-mini-btn {
+    color: #ff9fb9;
+}
+.danger-mini-btn:hover {
+    border-color: var(--accent);
+    color: #fff;
 }
 .layout-select:hover {
     border-color: var(--text-muted);
@@ -1198,6 +1244,28 @@ kbd {
 }
 .media-slot-card.active-slot {
     background: rgba(255, 71, 126, 0.12);
+}
+.control-check {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-main) !important;
+    cursor: pointer;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    margin: 12px 0 !important;
+}
+.control-check input {
+    width: 16px;
+    height: 16px;
+}
+.media-fit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 12px;
 }
 .slide-media-item {
     display: grid;

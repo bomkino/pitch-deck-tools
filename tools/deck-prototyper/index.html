@@ -21,7 +21,7 @@
                     "
                     >pitch.dog</span
                 >
-                <span id="app-version" class="app-version">v0.4.0</span>
+                <span id="app-version" class="app-version">v0.5.0</span>
             </div>
             <div class="phase-switcher">
                 <button class="phase-btn active" data-target="view-script">
@@ -54,7 +54,7 @@
                     placeholder="Version"
                 />
                 <button id="btn-reset-project" class="btn subtle-btn header-btn">
-                    Reset Project
+                    New Project
                 </button>
                 <span id="save-status">All changes saved</span>
             </div>
@@ -85,7 +85,7 @@
                                 id="btn-reload-script"
                                 class="btn subtle-btn btn-sync"
                             >
-                                Reload from File
+                                Sync from File
                             </button>
                             <button
                                 id="btn-add-slide"
@@ -321,7 +321,7 @@
                                         type="range"
                                         id="ctrl-scale"
                                         min="20"
-                                        max="150"
+                                        max="300"
                                         value="100"
                                         style="flex: 1"
                                     />
@@ -350,6 +350,30 @@
                                     />
                                     Mirror Horizontal
                                 </label>
+                                <label class="control-check">
+                                    <input type="checkbox" id="ctrl-show-image-edge" />
+                                    Show image edge
+                                </label>
+                                <div class="media-fit-grid">
+                                    <button class="mini-btn" id="btn-fit-width">
+                                        Fit width
+                                    </button>
+                                    <button class="mini-btn" id="btn-fit-height">
+                                        Fit height
+                                    </button>
+                                    <button class="mini-btn" data-align-edge="left">
+                                        Align left
+                                    </button>
+                                    <button class="mini-btn" data-align-edge="right">
+                                        Align right
+                                    </button>
+                                    <button class="mini-btn" data-align-edge="top">
+                                        Align top
+                                    </button>
+                                    <button class="mini-btn" data-align-edge="bottom">
+                                        Align bottom
+                                    </button>
+                                </div>
                             </div>
 
                             <div

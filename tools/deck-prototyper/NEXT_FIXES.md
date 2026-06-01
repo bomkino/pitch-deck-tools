@@ -11,6 +11,8 @@ This is the working list distilled from the current prototyper feedback. Keep it
 - Assembly now has one selected-slide media panel instead of the old Mains/Backups tab split.
 - Curation right-click menu is now a flat direct-action menu with viewport edge detection.
 - Assembly now has explicit media slot cards and per-slot pan/scale/mirror state.
+- Assembly now has image-edge preview, fit width/height controls, and edge alignment controls.
+- Script now has explicit delete-slide support and clearer two-way sync wording.
 
 ## Highest Priority
 
@@ -38,7 +40,7 @@ This is the working list distilled from the current prototyper feedback. Keep it
 ## Known Pain Points From Feedback
 
 - Tab 1 feels ugly and hard to adjust text in.
-- Tab 1 did not support adding or reordering slides originally; this is started but needs polish.
+- Tab 1 supports adding, deleting, and reordering slides; it still needs a calmer visual redesign.
 - Media count per slide is too hard to understand and should default to one image.
 - Sync between the web app and notepad file needs clearer two-way intent and conflict handling.
 - Tab 2 right-click behavior was brittle, especially near viewport edges.
@@ -52,9 +54,9 @@ This is the working list distilled from the current prototyper feedback. Keep it
 
 ## Suggested Version Plan
 
-- `v0.5.0`: Script tab redesign and explicit two-way sync with conflict clarity.
 - `v0.6.0`: Curation/lightbox redesign, keyboard/right-click parity, GIF frame picker.
 - `v0.7.0`: Export preflight and final deck quality checks.
+- `v0.8.0`: Deeper script sync conflict preview and export preflight.
 
 ## GitHub Policy
 

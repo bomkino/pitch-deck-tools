@@ -189,11 +189,11 @@ document
 
 document.getElementById("btn-reset-project")?.addEventListener("click", async () => {
   const ok = window.confirm(
-    "Reset this prototyper project to one blank slide? Current deck-copy.txt and manifest.json will be backed up first.",
+    "Start a new prototyper project with one blank slide? Current deck-copy.txt and manifest.json will be backed up first.",
   );
   if (!ok) return;
   if (scriptSyncTimer) clearTimeout(scriptSyncTimer);
-  saveStatus.textContent = "Resetting project...";
+  saveStatus.textContent = "Starting new project...";
   try {
     const response = await fetch("/api/reset-project", { method: "POST" });
     const resetData = await response.json();
@@ -204,7 +204,7 @@ document.getElementById("btn-reset-project")?.addEventListener("click", async ()
     activeAssemblySlide = appData.slides[0] ? String(appData.slides[0].slide) : null;
     targetCurationSlide = activeAssemblySlide;
     renderAllViews();
-    saveStatus.textContent = `Reset complete. Backup: ${resetData.backup}`;
+    saveStatus.textContent = `New project ready. Backup: ${resetData.backup}`;
   } catch (e) {
     saveStatus.textContent = "Reset Failed!";
     saveStatus.style.color = "var(--accent)";
@@ -217,7 +217,7 @@ async function init() {
     appData = await response.json();
     ensureManifestShape();
     document.getElementById("app-version").textContent =
-      `v${appData.appVersion || "0.4.0"}`;
+      `v${appData.appVersion || "0.5.0"}`;
 
     for (const slide in appData.manifest.slideSlots) {
       const slot = appData.manifest.slideSlots[slide];
@@ -302,6 +302,7 @@ function renderScriptTab() {
                         <button class="mini-btn" onclick="moveSlide('${s.slide}', -1)" ${isFirst ? "disabled" : ""}>Up</button>
                         <button class="mini-btn" onclick="moveSlide('${s.slide}', 1)" ${isLast ? "disabled" : ""}>Down</button>
                         <button class="mini-btn" onclick="addSlideAfter('${s.slide}')">Add After</button>
+                        <button class="mini-btn danger-mini-btn" onclick="deleteSlide('${s.slide}')">Delete</button>
                     </div>
                     <select class="layout-select custom-select" onchange="saveScriptLayout('${s.slide}', this.value)">
                         <option value="full-bleed" ${layout === "full-bleed" ? "selected" : ""}>Full Bleed (1 Img)</option>
@@ -409,16 +410,18 @@ function renumberSlides() {
   if (targetCurationSlide) targetCurationSlide = mapping[targetCurationSlide];
 }
 
-function reorderSlide(sourceSlideNum, targetSlideNum) {
+function reorderSlide(sourceSlideNum, targetSlideNum, position = "before") {
   if (String(sourceSlideNum) === String(targetSlideNum)) return;
   const sourceIdx = appData.slides.findIndex(
     (s) => String(s.slide) === String(sourceSlideNum),
   );
-  const targetIdx = appData.slides.findIndex(
+  let targetIdx = appData.slides.findIndex(
     (s) => String(s.slide) === String(targetSlideNum),
   );
   if (sourceIdx < 0 || targetIdx < 0) return;
   const [slide] = appData.slides.splice(sourceIdx, 1);
+  if (sourceIdx < targetIdx) targetIdx -= 1;
+  if (position === "after") targetIdx += 1;
   appData.slides.splice(targetIdx, 0, slide);
   activeAssemblySlide = String(slide.slide);
   targetCurationSlide = String(slide.slide);
@@ -426,6 +429,22 @@ function reorderSlide(sourceSlideNum, targetSlideNum) {
   saveManifest();
   syncScriptToFile();
   renderAllViews();
+}
+
+function clearSlideDropClasses() {
+  document
+    .querySelectorAll(".is-drop-target, .drop-before, .drop-after")
+    .forEach((node) =>
+      node.classList.remove("is-drop-target", "drop-before", "drop-after"),
+    );
+}
+
+function markSlideDropTarget(target, clientY) {
+  clearSlideDropClasses();
+  const rect = target.getBoundingClientRect();
+  const position = clientY < rect.top + rect.height / 2 ? "before" : "after";
+  target.classList.add("is-drop-target", `drop-${position}`);
+  return position;
 }
 
 function attachSlideDragHandlers(containerSelector) {
@@ -451,7 +470,7 @@ function attachSlideDragHandlers(containerSelector) {
         .elementFromPoint(e.clientX, e.clientY)
         ?.closest(".outline-slide, .nav-slide-card");
       if (target?.dataset.slide && target.dataset.slide !== pointerSlideDrag.source) {
-        target.classList.add("is-drop-target");
+        markSlideDropTarget(target, e.clientY);
       }
     });
     handle?.addEventListener("pointerup", (e) => {
@@ -460,13 +479,16 @@ function attachSlideDragHandlers(containerSelector) {
         .elementFromPoint(e.clientX, e.clientY)
         ?.closest(".outline-slide, .nav-slide-card");
       const sourceSlide = pointerSlideDrag.source;
+      const dropPosition =
+        target?.classList.contains("drop-after") ? "after" : "before";
       pointerSlideDrag = null;
       draggedSlideNum = null;
+      clearSlideDropClasses();
       document
-        .querySelectorAll(".is-drop-target, .is-dragging")
-        .forEach((node) => node.classList.remove("is-drop-target", "is-dragging"));
+        .querySelectorAll(".is-dragging")
+        .forEach((node) => node.classList.remove("is-dragging"));
       if (target?.dataset.slide && target.dataset.slide !== sourceSlide) {
-        reorderSlide(sourceSlide, target.dataset.slide);
+        reorderSlide(sourceSlide, target.dataset.slide, dropPosition);
       }
     });
     el.addEventListener("dragstart", (e) => {
@@ -478,27 +500,30 @@ function attachSlideDragHandlers(containerSelector) {
     el.addEventListener("dragover", (e) => {
       e.preventDefault();
       if (draggedSlideNum && draggedSlideNum !== el.dataset.slide) {
-        el.classList.add("is-drop-target");
+        markSlideDropTarget(el, e.clientY);
       }
     });
     el.addEventListener("dragleave", () => {
-      el.classList.remove("is-drop-target");
+      el.classList.remove("is-drop-target", "drop-before", "drop-after");
     });
     el.addEventListener("drop", (e) => {
       e.preventDefault();
       const sourceSlide = e.dataTransfer.getData("text/plain") || draggedSlideNum;
       const targetSlide = el.dataset.slide;
+      const dropPosition = el.classList.contains("drop-after") ? "after" : "before";
+      clearSlideDropClasses();
       document
-        .querySelectorAll(".is-drop-target, .is-dragging")
-        .forEach((node) => node.classList.remove("is-drop-target", "is-dragging"));
-      reorderSlide(sourceSlide, targetSlide);
+        .querySelectorAll(".is-dragging")
+        .forEach((node) => node.classList.remove("is-dragging"));
+      reorderSlide(sourceSlide, targetSlide, dropPosition);
       draggedSlideNum = null;
     });
     el.addEventListener("dragend", () => {
       draggedSlideNum = null;
+      clearSlideDropClasses();
       document
-        .querySelectorAll(".is-drop-target, .is-dragging")
-        .forEach((node) => node.classList.remove("is-drop-target", "is-dragging"));
+        .querySelectorAll(".is-dragging")
+        .forEach((node) => node.classList.remove("is-dragging"));
     });
   });
 }
@@ -531,6 +556,33 @@ window.moveSlide = function (slideNum, direction) {
   appData.slides.splice(newIdx, 0, slide);
   activeAssemblySlide = String(slide.slide);
   targetCurationSlide = String(slide.slide);
+  renumberSlides();
+  saveManifest();
+  syncScriptToFile();
+  renderAllViews();
+};
+
+window.deleteSlide = function (slideNum) {
+  if (appData.slides.length <= 1) {
+    saveStatus.textContent = "Keep at least one slide.";
+    return;
+  }
+  const slide = appData.slides.find((s) => String(s.slide) === String(slideNum));
+  const label = slide?.head ? `Slide ${slideNum}: ${scrubText(slide.head)}` : `Slide ${slideNum}`;
+  const ok = window.confirm(`Delete ${label}? This updates deck-copy.txt too.`);
+  if (!ok) return;
+
+  const idx = appData.slides.findIndex((s) => String(s.slide) === String(slideNum));
+  if (idx < 0) return;
+  appData.slides.splice(idx, 1);
+  ["customText", "slideSlots", "slideSettings", "slideLayouts", "slideNotes"].forEach(
+    (key) => {
+      if (appData.manifest[key]) delete appData.manifest[key][slideNum];
+    },
+  );
+  const nextActive = appData.slides[Math.min(idx, appData.slides.length - 1)];
+  activeAssemblySlide = nextActive ? String(nextActive.slide) : null;
+  targetCurationSlide = activeAssemblySlide;
   renumberSlides();
   saveManifest();
   syncScriptToFile();
@@ -840,6 +892,41 @@ function clampActiveMediaSlot(slideNum) {
     0,
     Math.min(activeMediaSlotIndex, Math.max(0, visibleSlots - 1)),
   );
+}
+
+function getSlotRect(slideNum, idx) {
+  const layout = appData.manifest.slideLayouts[slideNum] || "full-bleed";
+  const slot = appData.manifest.slideSlots[slideNum] || { mains: [] };
+  const mains = Array.isArray(slot.mains) ? slot.mains : [];
+  if (layout === "text-only" || mains.length === 0) return null;
+  if (layout === "full-bleed") return { x: 0, y: 0, w: 2576, h: 1080 };
+
+  const count = layout === "split" ? 2 : Math.max(1, mains.length);
+  const cols = layout === "split" ? 2 : Math.ceil(Math.sqrt(count));
+  const rows = layout === "split" ? 1 : Math.ceil(count / cols);
+  const cellW = 2576 / cols;
+  const cellH = 1080 / rows;
+  if (idx >= mains.length) return null;
+  return {
+    x: (idx % cols) * cellW,
+    y: Math.floor(idx / cols) * cellH,
+    w: cellW,
+    h: cellH,
+  };
+}
+
+function getCoverDrawSize(img, rect) {
+  const imgRatio = img.width / img.height;
+  const rectRatio = rect.w / rect.h;
+  let drawW = rect.w;
+  let drawH = rect.h;
+
+  if (imgRatio > rectRatio) {
+    drawW = rect.h * imgRatio;
+  } else {
+    drawH = rect.w / imgRatio;
+  }
+  return { drawW, drawH };
 }
 
 function normalizeSlideSlots() {
@@ -1177,6 +1264,11 @@ function updateInspectorUI() {
     layout !== "text-only" && Boolean(slotData.mains[activeMediaSlotIndex]);
   document.getElementById("ctrl-scale").disabled = !hasEditableMedia;
   document.getElementById("ctrl-flip").disabled = !hasEditableMedia;
+  document
+    .querySelectorAll("#btn-fit-width, #btn-fit-height, [data-align-edge]")
+    .forEach((button) => {
+      button.disabled = !hasEditableMedia;
+    });
   const framingLabel = document.getElementById("media-framing-label");
   if (framingLabel) {
     framingLabel.textContent = hasEditableMedia
@@ -1353,30 +1445,31 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
   return currentY;
 }
 
-function drawImageCoverInRect(context, img, rect, transform = {}) {
+function drawImageCoverInRect(context, img, rect, transform = {}, options = {}) {
   const scale = (transform.scale || 100) / 100;
-  const imgRatio = img.width / img.height;
-  const rectRatio = rect.w / rect.h;
-  let drawW = rect.w;
-  let drawH = rect.h;
-
-  if (imgRatio > rectRatio) {
-    drawW = rect.h * imgRatio;
-  } else {
-    drawH = rect.w / imgRatio;
-  }
+  const { drawW, drawH } = getCoverDrawSize(img, rect);
+  const centerX = rect.x + rect.w / 2 + (transform.x || 0);
+  const centerY = rect.y + rect.h / 2 + (transform.y || 0);
 
   context.save();
   context.beginPath();
   context.rect(rect.x, rect.y, rect.w, rect.h);
   context.clip();
-  context.translate(
-    rect.x + rect.w / 2 + (transform.x || 0),
-    rect.y + rect.h / 2 + (transform.y || 0),
-  );
+  context.translate(centerX, centerY);
   context.scale(transform.flip ? -scale : scale, scale);
   context.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
   context.restore();
+
+  if (options.showEdge) {
+    context.save();
+    context.translate(centerX, centerY);
+    context.scale(transform.flip ? -scale : scale, scale);
+    context.strokeStyle = "rgba(255, 255, 255, 0.95)";
+    context.lineWidth = 6 / Math.max(scale, 0.1);
+    context.setLineDash([28 / Math.max(scale, 0.1), 16 / Math.max(scale, 0.1)]);
+    context.strokeRect(-drawW / 2, -drawH / 2, drawW, drawH);
+    context.restore();
+  }
 }
 
 function getCanvasSlotAtPoint(slideNum, canvasX, canvasY) {
@@ -1411,10 +1504,17 @@ function drawSlideToContext(slideNum, targetCtx, forceGrid = false) {
   drawCheckerboard(targetCtx, 2576, 1080);
 
   if (layout !== "text-only" && slotData.mains.length > 0) {
+    const showImageEdge = document.getElementById("ctrl-show-image-edge")?.checked;
     if (layout === "full-bleed") {
       const img = loadedImages[slotData.mains[0]];
       if (img) {
-        drawImageCoverInRect(targetCtx, img, { x: 0, y: 0, w: 2576, h: 1080 }, ensureSlotTransform(slideNum, 0));
+        drawImageCoverInRect(
+          targetCtx,
+          img,
+          { x: 0, y: 0, w: 2576, h: 1080 },
+          ensureSlotTransform(slideNum, 0),
+          { showEdge: showImageEdge && activeMediaSlotIndex === 0 },
+        );
       }
     } else {
       const count = layout === "split" ? 2 : slotData.mains.length;
@@ -1433,6 +1533,7 @@ function drawSlideToContext(slideNum, targetCtx, forceGrid = false) {
             img,
             { x: c * cellW, y: r * cellH, w: cellW, h: cellH },
             ensureSlotTransform(slideNum, i),
+            { showEdge: showImageEdge && activeMediaSlotIndex === i },
           );
         }
       });
@@ -1631,6 +1732,70 @@ document.getElementById("ctrl-flip")?.addEventListener("change", (e) => {
 document
   .getElementById("ctrl-show-grid")
   ?.addEventListener("change", triggerCanvasRender);
+document
+  .getElementById("ctrl-show-image-edge")
+  ?.addEventListener("change", triggerCanvasRender);
+
+function getActiveSlotImageAndRect() {
+  if (!activeAssemblySlide) return null;
+  const slot = appData.manifest.slideSlots[activeAssemblySlide] || { mains: [] };
+  const filename = slot.mains?.[activeMediaSlotIndex];
+  const img = filename ? loadedImages[filename] : null;
+  const rect = getSlotRect(activeAssemblySlide, activeMediaSlotIndex);
+  if (!filename || !img || !rect) return null;
+  return { filename, img, rect };
+}
+
+function updateSlotTransformControls() {
+  const transform = ensureSlotTransform(activeAssemblySlide, activeMediaSlotIndex);
+  document.getElementById("ctrl-scale").value = transform.scale || 100;
+  document.getElementById("lbl-scale").textContent = `${transform.scale || 100}%`;
+  document.getElementById("ctrl-flip").checked = transform.flip || false;
+}
+
+function fitActiveSlot(axis) {
+  const active = getActiveSlotImageAndRect();
+  if (!active) return;
+  const transform = ensureSlotTransform(activeAssemblySlide, activeMediaSlotIndex);
+  const { drawW, drawH } = getCoverDrawSize(active.img, active.rect);
+  const nextScale =
+    axis === "height"
+      ? (active.rect.h / drawH) * 100
+      : (active.rect.w / drawW) * 100;
+  transform.scale = Math.max(20, Math.min(300, Math.round(nextScale)));
+  transform.x = 0;
+  transform.y = 0;
+  updateSlotTransformControls();
+  saveManifest();
+  triggerCanvasRender();
+}
+
+function alignActiveSlot(edge) {
+  const active = getActiveSlotImageAndRect();
+  if (!active) return;
+  const transform = ensureSlotTransform(activeAssemblySlide, activeMediaSlotIndex);
+  const { drawW, drawH } = getCoverDrawSize(active.img, active.rect);
+  const scale = (transform.scale || 100) / 100;
+  const overflowX = Math.max(0, drawW * scale - active.rect.w) / 2;
+  const overflowY = Math.max(0, drawH * scale - active.rect.h) / 2;
+
+  if (edge === "left") transform.x = overflowX;
+  if (edge === "right") transform.x = -overflowX;
+  if (edge === "top") transform.y = overflowY;
+  if (edge === "bottom") transform.y = -overflowY;
+  saveManifest();
+  triggerCanvasRender();
+}
+
+document
+  .getElementById("btn-fit-width")
+  ?.addEventListener("click", () => fitActiveSlot("width"));
+document
+  .getElementById("btn-fit-height")
+  ?.addEventListener("click", () => fitActiveSlot("height"));
+document.querySelectorAll("[data-align-edge]").forEach((button) => {
+  button.addEventListener("click", () => alignActiveSlot(button.dataset.alignEdge));
+});
 
 document.getElementById("btn-reset-pos")?.addEventListener("click", () => {
   if (!activeAssemblySlide) return;

@@ -20,8 +20,9 @@ BACKUPS_DIR = PROJECT_DIR / "_backups"
 MANIFEST_FILE = PROJECT_DIR / "manifest.json"
 COPY_FILE = PROJECT_DIR / "deck-copy.txt"
 EXAMPLE_COPY_FILE = PROJECT_DIR / "deck-copy.example.txt"
-PORT = 8000
-APP_VERSION = "0.4.0"
+PORT = int(os.environ.get("PORT", "8000"))
+OPEN_BROWSER = os.environ.get("PROTOTYPER_OPEN_BROWSER", "1") != "0"
+APP_VERSION = "0.5.0"
 
 RESET_COPY = """=== 1 ===
 HEAD: Untitled Slide
@@ -372,7 +373,11 @@ def main():
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("127.0.0.1", PORT), PrototyperHandler) as httpd:
         print(f"\n[SYSTEM ONLINE] Serving UI at http://localhost:{PORT}/index.html")
-        webbrowser.open(f"http://localhost:{PORT}/index.html")
+        if OPEN_BROWSER:
+            try:
+                webbrowser.open(f"http://localhost:{PORT}/index.html")
+            except Exception:
+                print("[INFO] Browser did not open automatically.")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:

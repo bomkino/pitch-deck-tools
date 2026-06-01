@@ -20,7 +20,7 @@ It is designed around four steps:
 
 ## Version
 
-Current prototyper app version: `v0.4.0`
+Current prototyper app version: `v0.5.0`
 
 Changes are tracked in `CHANGELOG.md`.
 
@@ -38,6 +38,13 @@ Or run:
 
 ```bash
 python3 app.py
+```
+
+On Linux, use the same command. Optional environment variables:
+
+```bash
+PORT=8010 python3 app.py
+PROTOTYPER_OPEN_BROWSER=0 python3 app.py
 ```
 
 Then open:
