@@ -21,6 +21,7 @@
                     "
                     >pitch.dog</span
                 >
+                <span id="app-version" class="app-version">v0.5.0</span>
             </div>
             <div class="phase-switcher">
                 <button class="phase-btn active" data-target="view-script">
@@ -52,6 +53,9 @@
                     value="v1.0"
                     placeholder="Version"
                 />
+                <button id="btn-reset-project" class="btn subtle-btn header-btn">
+                    New Project
+                </button>
                 <span id="save-status">All changes saved</span>
             </div>
         </header>
@@ -76,12 +80,26 @@
                                 >Press ? for Help</span
                             >
                         </div>
-                        <button
-                            id="btn-sync-script"
-                            class="btn primary-btn btn-sync"
-                        >
-                            Sync to File
-                        </button>
+                        <div class="script-actions">
+                            <button
+                                id="btn-reload-script"
+                                class="btn subtle-btn btn-sync"
+                            >
+                                Sync from File
+                            </button>
+                            <button
+                                id="btn-add-slide"
+                                class="btn subtle-btn btn-sync"
+                            >
+                                Add Slide
+                            </button>
+                            <button
+                                id="btn-sync-script"
+                                class="btn primary-btn btn-sync"
+                            >
+                                Sync to File
+                            </button>
+                        </div>
                     </div>
                     <div
                         id="text-editor-grid"
@@ -174,12 +192,7 @@
                 </div>
 
                 <div
-                    class="sidebar nav-sidebar"
-                    style="
-                        width: 320px;
-                        border-left: 1px solid var(--border);
-                        border-right: none;
-                    "
+                    class="sidebar nav-sidebar curation-reference-sidebar"
                 >
                     <div class="sidebar-header"><h2>Script Reference</h2></div>
                     <div
@@ -203,21 +216,8 @@
                     </div>
                 </div>
 
-                <div
-                    class="sidebars-wrapper"
-                    style="
-                        display: flex;
-                        width: 660px;
-                        border-left: 1px solid var(--border);
-                    "
-                >
-                    <div
-                        class="sidebar nav-sidebar"
-                        style="
-                            width: 320px;
-                            border-right: 1px solid var(--border);
-                        "
-                    >
+                <div class="sidebars-wrapper">
+                    <div class="sidebar nav-sidebar assembly-slide-sidebar">
                         <div class="sidebar-header"><h2>Slides</h2></div>
                         <div
                             id="slide-nav"
@@ -226,10 +226,7 @@
                         ></div>
                     </div>
 
-                    <div
-                        class="sidebar inspector-sidebar"
-                        style="width: 340px; border-left: none"
-                    >
+                    <div class="sidebar inspector-sidebar">
                         <div class="sidebar-header"><h2>Inspector</h2></div>
                         <div class="scroll-area padding-area">
                             <div
@@ -306,7 +303,9 @@
                             </div>
 
                             <div class="inspector-group" id="panel-media">
-                                <label>Image Framing (Full Bleed)</label>
+                                <label id="media-framing-label"
+                                    >Image Framing</label
+                                >
                                 <div
                                     style="
                                         display: flex;
@@ -322,7 +321,7 @@
                                         type="range"
                                         id="ctrl-scale"
                                         min="20"
-                                        max="150"
+                                        max="300"
                                         value="100"
                                         style="flex: 1"
                                     />
@@ -351,6 +350,30 @@
                                     />
                                     Mirror Horizontal
                                 </label>
+                                <label class="control-check">
+                                    <input type="checkbox" id="ctrl-show-image-edge" />
+                                    Show image edge
+                                </label>
+                                <div class="media-fit-grid">
+                                    <button class="mini-btn" id="btn-fit-width">
+                                        Fit width
+                                    </button>
+                                    <button class="mini-btn" id="btn-fit-height">
+                                        Fit height
+                                    </button>
+                                    <button class="mini-btn" data-align-edge="left">
+                                        Align left
+                                    </button>
+                                    <button class="mini-btn" data-align-edge="right">
+                                        Align right
+                                    </button>
+                                    <button class="mini-btn" data-align-edge="top">
+                                        Align top
+                                    </button>
+                                    <button class="mini-btn" data-align-edge="bottom">
+                                        Align bottom
+                                    </button>
+                                </div>
                             </div>
 
                             <div
@@ -396,46 +419,18 @@
                             </div>
 
                             <div class="inspector-group">
+                                <label>Media for this slide</label>
                                 <div
-                                    style="
-                                        display: flex;
-                                        border-bottom: 1px solid var(--border);
-                                        margin-bottom: 12px;
-                                    "
-                                >
-                                    <button
-                                        class="btn primary-btn"
-                                        style="
-                                            border-radius: 0;
-                                            background: transparent;
-                                            color: var(--accent);
-                                            border-bottom: 2px solid
-                                                var(--accent);
-                                        "
-                                        id="tab-mains"
-                                    >
-                                        Mains
-                                    </button>
-                                    <button
-                                        class="btn primary-btn"
-                                        style="
-                                            border-radius: 0;
-                                            background: transparent;
-                                            color: var(--text-muted);
-                                        "
-                                        id="tab-backups"
-                                    >
-                                        Backups
-                                    </button>
-                                </div>
+                                    id="slide-media-summary"
+                                    class="slide-media-summary"
+                                ></div>
                                 <div
                                     id="inspector-mains-area"
-                                    class="assembly-backups"
+                                    class="slide-media-list"
                                 ></div>
                                 <div
                                     id="inspector-backups-area"
-                                    class="assembly-backups"
-                                    style="display: none"
+                                    class="slide-media-list"
                                 ></div>
                             </div>
                         </div>
@@ -555,29 +550,27 @@
 
         <!-- CONTEXT MENU -->
         <div id="context-menu" class="context-menu">
-            <div class="cm-item" id="cm-shortlist">
+            <div id="cm-media-title" class="cm-title">Media</div>
+            <button class="cm-action" id="cm-open-preview">
+                Open Preview
+            </button>
+            <button class="cm-action" id="cm-shortlist">
                 Toggle Shortlist <span>S</span>
-            </div>
-            <div class="cm-item has-sub">
-                Assign Star...
-                <div class="cm-submenu">
-                    <div class="cm-item" data-star="1">1 Star</div>
-                    <div class="cm-item" data-star="3">3 Stars</div>
-                    <div class="cm-item" data-star="5">5 Stars</div>
-                </div>
+            </button>
+            <div class="cm-divider"></div>
+            <div class="cm-label">Rating</div>
+            <div class="cm-row">
+                <button class="cm-chip" data-star="1">1</button>
+                <button class="cm-chip" data-star="3">3</button>
+                <button class="cm-chip" data-star="5">5</button>
             </div>
             <div class="cm-divider"></div>
-            <div class="cm-item has-sub">
-                Set as Main...
-                <div class="cm-submenu slide-submenu" id="cm-main-slides"></div>
-            </div>
-            <div class="cm-item has-sub">
-                Set as Backup...
-                <div
-                    class="cm-submenu slide-submenu"
-                    id="cm-backup-slides"
-                ></div>
-            </div>
+            <button class="cm-action" id="cm-set-main">
+                Set as main for target slide
+            </button>
+            <button class="cm-action" id="cm-set-backup">
+                Add as alternate for target slide
+            </button>
         </div>
 
         <script src="app.js"></script>

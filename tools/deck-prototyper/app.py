@@ -16,10 +16,19 @@ from urllib.parse import parse_qs, urlparse
 PROJECT_DIR = Path(__file__).resolve().parent
 MEDIA_DIR = PROJECT_DIR / "_media"
 THUMBS_DIR = MEDIA_DIR / ".thumbs"
+BACKUPS_DIR = PROJECT_DIR / "_backups"
 MANIFEST_FILE = PROJECT_DIR / "manifest.json"
 COPY_FILE = PROJECT_DIR / "deck-copy.txt"
 EXAMPLE_COPY_FILE = PROJECT_DIR / "deck-copy.example.txt"
-PORT = 8000
+PORT = int(os.environ.get("PORT", "8000"))
+OPEN_BROWSER = os.environ.get("PROTOTYPER_OPEN_BROWSER", "1") != "0"
+APP_VERSION = "0.5.0"
+
+RESET_COPY = """=== 1 ===
+HEAD: Untitled Slide
+SUB:
+BODY:
+"""
 
 THUMBS_DIR.mkdir(parents=True, exist_ok=True)
 IS_MACOS = sys.platform == "darwin"
@@ -54,7 +63,7 @@ def parse_deck_copy():
 def scan_media():
     media = []
     if MEDIA_DIR.exists():
-        valid_exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+        valid_exts = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"}
         for root, _, files in os.walk(MEDIA_DIR):
             if ".thumbs" in root:
                 continue
@@ -69,6 +78,36 @@ def scan_media():
                         }
                     )
     return media
+
+
+def write_deck_copy(slides):
+    out_text = ""
+    for s in slides:
+        out_text += f"=== {s['slide']} ===\nHEAD: {s.get('head', '')}\nSUB: {s.get('sub', '')}\nBODY:\n{s.get('body', '')}\n\n"
+    COPY_FILE.write_text(out_text.strip() + "\n", encoding="utf-8")
+
+
+def backup_project(label):
+    from datetime import datetime
+
+    stamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
+    safe_label = "".join(c if c.isalnum() else "-" for c in label).strip("-")
+    backup_dir = BACKUPS_DIR / f"{stamp}-{safe_label}"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+
+    for path in [
+        MANIFEST_FILE,
+        COPY_FILE,
+        PROJECT_DIR / "prototyper-log.txt",
+        PROJECT_DIR / "app.py",
+        PROJECT_DIR / "app.js",
+        PROJECT_DIR / "index.html",
+        PROJECT_DIR / "styles.css",
+    ]:
+        if path.exists():
+            shutil.copy2(path, backup_dir / path.name)
+
+    return backup_dir
 
 
 def generate_thumb(original_path, thumb_path):
@@ -138,6 +177,7 @@ class PrototyperHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             data = {
+                "appVersion": APP_VERSION,
                 "slides": parse_deck_copy(),
                 "media": scan_media(),
                 "manifest": json.loads(MANIFEST_FILE.read_text(encoding="utf-8"))
@@ -184,14 +224,27 @@ class PrototyperHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == "/api/sync":
             content_length = int(self.headers["Content-Length"])
             payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
-            out_text = ""
-            for s in payload:
-                out_text += f"=== {s['slide']} ===\nHEAD: {s.get('head', '')}\nSUB: {s.get('sub', '')}\nBODY:\n{s.get('body', '')}\n\n"
-            COPY_FILE.write_text(out_text.strip() + "\n", encoding="utf-8")
+            write_deck_copy(payload)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
+            return
+
+        if self.path == "/api/reset-project":
+            backup_dir = backup_project("reset-project")
+            MANIFEST_FILE.write_text(json.dumps({}, indent=2), encoding="utf-8")
+            COPY_FILE.write_text(RESET_COPY, encoding="utf-8")
+            data = {
+                "status": "ok",
+                "backup": backup_dir.relative_to(PROJECT_DIR).as_posix(),
+                "slides": parse_deck_copy(),
+                "manifest": {},
+            }
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(data).encode("utf-8"))
             return
 
         if self.path == "/api/export-media":
@@ -320,7 +373,11 @@ def main():
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("127.0.0.1", PORT), PrototyperHandler) as httpd:
         print(f"\n[SYSTEM ONLINE] Serving UI at http://localhost:{PORT}/index.html")
-        webbrowser.open(f"http://localhost:{PORT}/index.html")
+        if OPEN_BROWSER:
+            try:
+                webbrowser.open(f"http://localhost:{PORT}/index.html")
+            except Exception:
+                print("[INFO] Browser did not open automatically.")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
