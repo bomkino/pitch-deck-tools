@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, json, hashlib, subprocess, tempfile, time, re, zipfile
+import os, sys, json, hashlib, shutil, subprocess, tempfile, time, re, zipfile
 from pathlib import Path
 import concurrent.futures
 
@@ -157,7 +157,7 @@ def _zip_thumbs(zip_path, bundle_id):
                         out.append({"url": f"thumbs/{tp.name}", "source": rel_zip})
                         continue
                     z.extract(entry, tmp)
-                    if _run(["sips", "-Z", str(THUMB_SIZE), "-s", "format", "jpeg", str(Path(tmp) / entry), "--out", str(tp)]):
+                    if _make_thumb(Path(tmp) / entry, tp):
                         out.append({"url": f"thumbs/{tp.name}", "source": rel_zip})
     except Exception: pass
     return out
@@ -166,13 +166,26 @@ def _make_thumb(source, thumb):
     ext = source.suffix.lower()
     try:
         if ext in (".jpg", ".jpeg", ".png", ".gif", ".tiff", ".tif", ".webp", ".heic"):
-            return _run(["sips", "-Z", str(THUMB_SIZE), "-s", "format", "jpeg", str(source), "--out", str(thumb)])
+            if shutil.which("sips") and _run(["sips", "-Z", str(THUMB_SIZE), "-s", "format", "jpeg", str(source), "--out", str(thumb)]):
+                return True
+            try:
+                from PIL import Image
+
+                with Image.open(source) as img:
+                    img.thumbnail((THUMB_SIZE, THUMB_SIZE))
+                    if img.mode in ("RGBA", "LA", "P"):
+                        img = img.convert("RGB")
+                    img.save(thumb, "JPEG", quality=85)
+                return True
+            except Exception:
+                return False
         if ext in (".mp4", ".mov", ".m4v", ".webm"):
-            return _run(["ffmpeg", "-y", "-i", str(source), "-ss", "00:00:01", "-vframes", "1", "-vf", f"scale={THUMB_SIZE}:-1", str(thumb)])
-        with tempfile.TemporaryDirectory() as tmp:
-            _run(["qlmanage", "-t", "-s", str(THUMB_SIZE), "-o", tmp, str(source)])
-            pngs = [p for p in Path(tmp).iterdir() if p.suffix.lower() == ".png"]
-            if pngs: return _run(["sips", "-s", "format", "jpeg", str(pngs[0]), "--out", str(thumb)])
+            return bool(shutil.which("ffmpeg")) and _run(["ffmpeg", "-y", "-i", str(source), "-ss", "00:00:01", "-vframes", "1", "-vf", f"scale={THUMB_SIZE}:-1", str(thumb)])
+        if shutil.which("qlmanage"):
+            with tempfile.TemporaryDirectory() as tmp:
+                _run(["qlmanage", "-t", "-s", str(THUMB_SIZE), "-o", tmp, str(source)])
+                pngs = [p for p in Path(tmp).iterdir() if p.suffix.lower() == ".png"]
+                if pngs: return _make_thumb(pngs[0], thumb)
     except Exception: return False
     return False
 
