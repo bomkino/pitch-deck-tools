@@ -16,6 +16,15 @@ It is designed around four steps:
 - Lets you shortlist and assign images to slides.
 - Lets you assemble quick deck frames on a canvas.
 - Exports visual frames and a PDF from the browser workflow.
+- Backs up current project state before using Reset Project.
+
+## Version
+
+Current prototyper app version: `v0.4.0`
+
+Changes are tracked in `CHANGELOG.md`.
+
+The current improvement backlog is tracked in `NEXT_FIXES.md`.
 
 ## Start
 
@@ -46,10 +55,10 @@ These files are intentionally not committed:
 - `deck-copy.txt`
 - `manifest.json`
 - `prototyper-log.txt`
+- `_backups/`
 
 The app falls back to `deck-copy.example.txt` when `deck-copy.txt` does not exist.
 
 ## Current Limitation
 
 The export workflow currently lives inside the browser app. The `export-slides.command` helper is not a true headless exporter yet.
-
