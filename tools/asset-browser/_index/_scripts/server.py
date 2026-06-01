@@ -6,6 +6,7 @@ server.py — Tiny local web server for the asset index.
 import http.server
 import socketserver
 import socket
+import shutil
 import subprocess
 import urllib.parse
 import os
@@ -19,8 +20,29 @@ INDEX_DIR   = SCRIPT_DIR.parent
 PROJECT_DIR = INDEX_DIR.parent
 INDEXER     = SCRIPT_DIR / "index_assets.py"
 
-DEFAULT_PORT = 8765
+DEFAULT_PORT = int(os.environ.get("PORT", "8765"))
+OPEN_BROWSER = os.environ.get("ASSET_BROWSER_OPEN_BROWSER", "1") != "0"
 PORT_RANGE = 50
+
+def _open_file(path, reveal=False):
+    if sys.platform == "darwin":
+        cmd = ["open", "-R", str(path)] if reveal else ["open", str(path)]
+        subprocess.Popen(cmd)
+        return
+
+    if sys.platform.startswith("linux"):
+        opener = shutil.which("xdg-open")
+        if not opener:
+            raise RuntimeError("xdg-open is not installed")
+        target = path.parent if reveal else path
+        subprocess.Popen([opener, str(target)])
+        return
+
+    if os.name == "nt":
+        os.startfile(str(path.parent if reveal else path))  # type: ignore[attr-defined]
+        return
+
+    raise RuntimeError(f"Opening files is not supported on {sys.platform}")
 
 def _resolve_path(target):
     target_path = Path(target)
@@ -89,8 +111,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self._send_json(
                     {"ok": False, "error": f"not found: {target}"}, 404)
             try:
-                cmd = ["open", "-R", str(resolved)] if reveal else ["open", str(resolved)]
-                subprocess.Popen(cmd)
+                _open_file(resolved, reveal=reveal)
                 return self._send_json({"ok": True, "resolved": str(resolved)})
             except Exception as e:
                 return self._send_json({"ok": False, "error": str(e)}, 500)
@@ -98,7 +119,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == "/_reindex":
             try:
                 result = subprocess.run(
-                    ["/usr/bin/python3", str(INDEXER)],
+                    [sys.executable, str(INDEXER)],
                     capture_output=True, timeout=600
                 )
                 return self._send_json({
@@ -128,7 +149,7 @@ def find_port(start, span):
 def main():
     if not (INDEX_DIR / "index.html").exists():
         print("No index.html yet. Running the indexer first.", flush=True)
-        subprocess.run(["/usr/bin/python3", str(INDEXER)])
+        subprocess.run([sys.executable, str(INDEXER)])
 
     port = find_port(DEFAULT_PORT, PORT_RANGE)
     url = f"http://localhost:{port}/"
@@ -138,13 +159,14 @@ def main():
     print(f"  {url}")
     print("=" * 50)
     print(f"\n  Project:  {PROJECT_DIR}")
-    print(f"\n  Browser is opening at the URL above.")
+    print(f"\n  Browser is {'opening' if OPEN_BROWSER else 'available'} at the URL above.")
     print(f"  Keep this Terminal window open while you work.")
     print(f"  Close this window (or Ctrl+C) to stop the server.\n")
 
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("127.0.0.1", port), Handler) as httpd:
-        webbrowser.open(url)
+        if OPEN_BROWSER:
+            webbrowser.open(url)
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:

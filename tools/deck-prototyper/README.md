@@ -26,21 +26,40 @@ Changes are tracked in `CHANGELOG.md`.
 
 The current improvement backlog is tracked in `NEXT_FIXES.md`.
 
-## Start
+## Start On Mac
 
-On a Mac, double-click:
+Double-click:
 
 ```text
 start-prototyper.command
 ```
 
-Or run:
+Or use Terminal:
 
 ```bash
 python3 app.py
 ```
 
-On Linux, use the same command. Optional environment variables:
+## Start On Linux
+
+```bash
+cd tools/deck-prototyper
+./start-prototyper.sh
+```
+
+If Linux says `Permission denied`:
+
+```bash
+chmod +x start-prototyper.sh
+```
+
+You can also run:
+
+```bash
+python3 app.py
+```
+
+Optional environment variables:
 
 ```bash
 PORT=8010 python3 app.py
