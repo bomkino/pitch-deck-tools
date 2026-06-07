@@ -1,5 +1,16 @@
 # Deck Prototyper Changelog
 
+## v0.7.0 - 2026-06-08
+
+- Added a Deck Health panel in Export with a readiness score, slide stats, blockers, and warnings.
+- Added a "Fix first issue" action that jumps directly to the relevant Script, Curation, or Assembly view.
+- Added export readiness warnings before media, visual, or spec-sheet export when blockers remain.
+- Grouped missing media by slide so older projects do not flood the health panel with duplicate-looking issues.
+- Made media search include filename, folder, and path.
+- Hardened Curation, Lightbox, Assembly navigation, and spec export text rendering so deck copy is escaped consistently.
+- Improved Export tab layout into a two-panel preflight and pipeline workspace.
+- Fixed Lightbox target emphasis so the selected slide and active-main state are clearer.
+
 ## v0.6.0 - 2026-06-08
 
 - Redesigned the Script tab cards so each slide is easier to scan while editing.

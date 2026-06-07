@@ -21,7 +21,7 @@
                     "
                     >pitch.dog</span
                 >
-                <span id="app-version" class="app-version">v0.6.0</span>
+                <span id="app-version" class="app-version">v0.7.0</span>
             </div>
             <div class="phase-switcher">
                 <button class="phase-btn active" data-target="view-script">
@@ -446,7 +446,31 @@
             <!-- TAB 4: EXPORT -->
             <section id="view-export" class="view-layer">
                 <div class="main-area center-area">
-                    <div class="export-card" style="max-width: 600px">
+                    <div class="export-workspace">
+                    <div class="deck-health-card">
+                        <div class="deck-health-header">
+                            <div>
+                                <h2>Deck Health</h2>
+                                <p id="deck-health-summary">
+                                    Checking slide readiness...
+                                </p>
+                            </div>
+                            <div id="deck-health-score" class="deck-health-score">
+                                --
+                            </div>
+                        </div>
+                        <div id="deck-health-stats" class="deck-health-stats"></div>
+                        <div id="deck-health-list" class="deck-health-list"></div>
+                        <button
+                            id="btn-fix-first-issue"
+                            class="btn subtle-btn deck-health-action"
+                            disabled
+                        >
+                            Fix first issue
+                        </button>
+                    </div>
+
+                    <div class="export-card">
                         <h2>Export Pipeline</h2>
                         <p style="margin-bottom: 24px">
                             Files will be packaged into
@@ -504,6 +528,7 @@
                                 browser print dialog.
                             </p>
                         </div>
+                    </div>
                     </div>
                 </div>
             </section>

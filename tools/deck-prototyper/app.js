@@ -17,6 +17,7 @@ let draggedSlideNum = null;
 let pointerSlideDrag = null;
 let scriptSyncDirty = false;
 let deckCopyStatus = null;
+let latestDeckHealth = null;
 
 let availableFolders = new Set();
 let selectedFolder = "All";
@@ -100,6 +101,7 @@ function renderAllViews() {
   renderAssemblyNav();
   updateInspectorUI();
   applyFiltersAndRenderGrid();
+  renderDeckHealth();
   preloadAndRenderCanvas();
 }
 
@@ -178,6 +180,7 @@ async function syncScriptToFile() {
       mtime: Date.now() / 1000,
     };
     updateScriptSyncStatus();
+    renderDeckHealth();
     setTimeout(() => (saveStatus.textContent = "deck-copy.txt updated"), 1500);
   } catch (e) {
     saveStatus.textContent = "Sync Failed!";
@@ -261,7 +264,7 @@ async function init() {
     ensureManifestShape();
     deckCopyStatus = appData.deckCopy || null;
     document.getElementById("app-version").textContent =
-      `v${appData.appVersion || "0.6.0"}`;
+      `v${appData.appVersion || "0.7.0"}`;
     updateScriptSyncStatus();
 
     for (const slide in appData.manifest.slideSlots) {
@@ -382,6 +385,7 @@ window.saveScriptLayout = function (slideNum, layout) {
   clampActiveMediaSlot(slideNum);
   saveManifest();
   renderScriptTab();
+  renderDeckHealth();
   updateInspectorUI();
   if (String(activeAssemblySlide) === String(slideNum)) {
     preloadAndRenderCanvas();
@@ -423,23 +427,203 @@ window.focusSlideWorkflow = function (slideNum, targetView) {
   }
 };
 
+function getSlideText(slide) {
+  const custom = appData.manifest.customText?.[slide.slide] || {};
+  return {
+    head: scrubText(custom.head !== undefined ? custom.head : slide.head),
+    sub: scrubText(custom.sub !== undefined ? custom.sub : slide.sub),
+    body: scrubText(custom.body !== undefined ? custom.body : slide.body),
+  };
+}
+
+function getDeckHealth() {
+  const mediaNames = new Set(appData.media.map((m) => m.filename));
+  const blockers = [];
+  const warnings = [];
+  let slidesWithMainMedia = 0;
+  let emptySlides = 0;
+
+  appData.slides.forEach((slide) => {
+    const text = getSlideText(slide);
+    const layout = appData.manifest.slideLayouts?.[slide.slide] || "full-bleed";
+    const slotData = appData.manifest.slideSlots?.[slide.slide] || {
+      mains: [],
+      backups: [],
+    };
+    const mains = Array.isArray(slotData.mains) ? slotData.mains.filter(Boolean) : [];
+    const backups = Array.isArray(slotData.backups)
+      ? slotData.backups.filter(Boolean)
+      : [];
+    const textPieces = [text.head, text.sub, text.body].filter(Boolean);
+    if (mains.length > 0) slidesWithMainMedia += 1;
+    if (textPieces.length === 0) emptySlides += 1;
+
+    if (textPieces.length === 0) {
+      warnings.push({
+        slide: slide.slide,
+        phase: "view-script",
+        title: `Slide ${slide.slide} is empty`,
+        detail: "Add at least a headline or body copy.",
+      });
+    } else if (!text.head) {
+      warnings.push({
+        slide: slide.slide,
+        phase: "view-script",
+        title: `Slide ${slide.slide} has no headline`,
+        detail: "A short headline makes the frame easier to scan.",
+      });
+    }
+
+    if (layout !== "text-only" && mains.length === 0) {
+      blockers.push({
+        slide: slide.slide,
+        phase: "view-curation",
+        title: `Slide ${slide.slide} needs main media`,
+        detail: "Assign at least one visual or switch the layout to text-only.",
+      });
+    }
+
+    if (layout === "text-only" && mains.length > 0) {
+      warnings.push({
+        slide: slide.slide,
+        phase: "view-assembly",
+        title: `Slide ${slide.slide} is text-only but has media`,
+        detail: "Remove the media or pick a visual layout.",
+      });
+    }
+
+    const missingMedia = [...new Set([...mains, ...backups].filter((filename) => !mediaNames.has(filename)))];
+    if (missingMedia.length > 0) {
+      const preview = missingMedia.slice(0, 3).join(", ");
+      blockers.push({
+        slide: slide.slide,
+        phase: "view-assembly",
+        title: `Slide ${slide.slide} has missing media`,
+        detail: `${missingMedia.length} missing file${missingMedia.length === 1 ? "" : "s"}: ${preview}${missingMedia.length > 3 ? "..." : ""}`,
+      });
+    }
+  });
+
+  if (scriptSyncDirty) {
+    warnings.unshift({
+      slide: null,
+      phase: "view-script",
+      title: "Browser edits are not synced to file",
+      detail: "Click Sync to File before exporting a final version.",
+    });
+  }
+
+  const totalIssues = blockers.length + warnings.length;
+  const score = Math.max(0, Math.round(100 - blockers.length * 18 - warnings.length * 6));
+  return {
+    score,
+    blockers,
+    warnings,
+    stats: {
+      slides: appData.slides.length,
+      slidesWithMainMedia,
+      emptySlides,
+      totalIssues,
+    },
+  };
+}
+
+function renderDeckHealth() {
+  latestDeckHealth = getDeckHealth();
+  const summary = document.getElementById("deck-health-summary");
+  const score = document.getElementById("deck-health-score");
+  const stats = document.getElementById("deck-health-stats");
+  const list = document.getElementById("deck-health-list");
+  const action = document.getElementById("btn-fix-first-issue");
+  if (!summary || !score || !stats || !list || !action) return;
+
+  const blockers = latestDeckHealth.blockers;
+  const warnings = latestDeckHealth.warnings;
+  score.textContent = String(latestDeckHealth.score);
+  score.classList.toggle("is-ready", blockers.length === 0);
+  score.classList.toggle("has-blockers", blockers.length > 0);
+
+  if (blockers.length === 0 && warnings.length === 0) {
+    summary.textContent = "Looks export-ready.";
+  } else if (blockers.length > 0) {
+    summary.textContent = `${blockers.length} blocker${blockers.length === 1 ? "" : "s"} before export.`;
+  } else {
+    summary.textContent = `${warnings.length} warning${warnings.length === 1 ? "" : "s"} to review.`;
+  }
+
+  stats.innerHTML = [
+    ["Slides", latestDeckHealth.stats.slides],
+    ["With media", latestDeckHealth.stats.slidesWithMainMedia],
+    ["Empty", latestDeckHealth.stats.emptySlides],
+    ["Issues", latestDeckHealth.stats.totalIssues],
+  ]
+    .map(
+      ([label, value]) => `
+        <div class="deck-health-stat">
+          <strong>${value}</strong>
+          <span>${label}</span>
+        </div>
+      `,
+    )
+    .join("");
+
+  const allItems = [
+    ...blockers.map((item) => ({ ...item, severity: "Blocker" })),
+    ...warnings.map((item) => ({ ...item, severity: "Warning" })),
+  ];
+  const maxVisibleItems = 8;
+  const items = allItems.slice(0, maxVisibleItems);
+  const hiddenCount = Math.max(0, allItems.length - items.length);
+
+  list.innerHTML = items.length
+    ? `${items
+        .map(
+          (item) => `
+            <button class="deck-health-item ${item.severity.toLowerCase()}" onclick="jumpToHealthIssue('${item.phase}', '${item.slide ?? ""}')">
+              <strong>${escapeHTML(item.severity)} · ${escapeHTML(item.title)}</strong>
+              <span>${escapeHTML(item.detail)}</span>
+            </button>
+          `,
+        )
+        .join("")}${hiddenCount > 0 ? `<div class="deck-health-more">+${hiddenCount} more issue${hiddenCount === 1 ? "" : "s"} in this deck</div>` : ""}`
+    : `<div class="deck-health-empty">No obvious issues found.</div>`;
+
+  action.disabled = items.length === 0;
+}
+
+window.jumpToHealthIssue = function (phase, slideNum = "") {
+  if (slideNum) {
+    activeAssemblySlide = String(slideNum);
+    targetCurationSlide = String(slideNum);
+  }
+  setActivePhase(phase || "view-script");
+  if (phase === "view-script") renderScriptTab();
+  if (phase === "view-curation") renderCurationSidebar();
+  if (phase === "view-assembly") {
+    renderAssemblyNav();
+    updateInspectorUI();
+    preloadAndRenderCanvas();
+  }
+};
+
+document.getElementById("btn-fix-first-issue")?.addEventListener("click", () => {
+  const first = latestDeckHealth?.blockers[0] || latestDeckHealth?.warnings[0];
+  if (!first) return;
+  window.jumpToHealthIssue(first.phase, first.slide || "");
+});
+
 function renderCurationSidebar() {
   const container = document.getElementById("curation-sidebar-script");
   if (!container) return;
   container.innerHTML = appData.slides
     .map((s) => {
-      const custom = appData.manifest.customText[s.slide] || {};
-      const head =
-        scrubText(custom.head !== undefined ? custom.head : s.head) ||
-        "Untitled";
-      const body =
-        scrubText(custom.body !== undefined ? custom.body : s.body) || "";
+      const { head, body } = getSlideText(s);
       const isActive = String(s.slide) === targetCurationSlide;
       return `
             <div class="curation-sidebar-item ${isActive ? "active-target" : ""}" onclick="setTargetCurationSlide('${s.slide}')">
                 <div style="font-size:10px; color:var(--accent); font-weight:700; margin-bottom:4px; letter-spacing:0.05em;">SLIDE ${s.slide}</div>
-                <div style="font-size:13px; font-weight:600; color:var(--text-main); margin-bottom:4px; line-height:1.2;">${head}</div>
-                <div style="font-size:11px; color:var(--text-muted); line-height:1.4; white-space:pre-wrap;">${body}</div>
+                <div style="font-size:13px; font-weight:600; color:var(--text-main); margin-bottom:4px; line-height:1.2;">${escapeHTML(head || "Untitled")}</div>
+                <div style="font-size:11px; color:var(--text-muted); line-height:1.4; white-space:pre-wrap;">${escapeHTML(body || "")}</div>
             </div>
         `;
     })
@@ -463,6 +647,7 @@ window.saveScriptEdit = function (slideNum, field, value) {
   scheduleScriptFileSync();
   renderScriptTab();
   renderCurationSidebar();
+  renderDeckHealth();
   if (
     activePhase === "view-assembly" &&
     String(activeAssemblySlide) === String(slideNum)
@@ -725,7 +910,8 @@ function isMediaMainAnywhere(filename) {
 function applyFiltersAndRenderGrid() {
   filteredMedia = appData.media.filter((m) => {
     const tags = appData.manifest.mediaTags[m.filename] || {};
-    if (searchQuery && !m.filename.toLowerCase().includes(searchQuery))
+    const searchable = `${m.filename} ${m.path} ${m._folder || ""}`.toLowerCase();
+    if (searchQuery && !searchable.includes(searchQuery))
       return false;
     if (currentFilter === "shortlist" && !tags.shortlist) return false;
     if (currentFilter === "starred" && !tags.star) return false;
@@ -783,7 +969,7 @@ function renderMediaGrid() {
       return `
             <div class="media-card ${mainClass} ${idx === gridFocusIndex ? "focused" : ""}" data-idx="${idx}" data-full="${fullUrl}" data-thumb="${thumbUrl}">
                 ${indicator}
-                <img src="${thumbUrl}" loading="lazy" alt="media">
+                <img src="${thumbUrl}" loading="lazy" alt="${escapeHTML(m.filename)}">
                 <div class="card-badges">${badges}</div>
             </div>
         `;
@@ -1102,6 +1288,7 @@ function executeTaggingAction(filename, action, val = null) {
   closeContextMenu();
   saveManifest();
   renderMediaGrid();
+  renderDeckHealth();
 }
 
 function handleCMAction(action, val = null) {
@@ -1160,7 +1347,7 @@ function updateLightboxUI() {
   if (tags.star)
     html += `<div class="lb-badge" style="background: var(--accent); color: #fff;">★ ${tags.star}</div>`;
   lbBadges.innerHTML = html;
-  lbMeta.innerHTML = `<strong>${media.filename}</strong><span>Folder: ${media._folder}</span><span>Type: ${media.type.toUpperCase()}</span>`;
+  lbMeta.innerHTML = `<strong>${escapeHTML(media.filename)}</strong><span>Folder: ${escapeHTML(media._folder)}</span><span>Type: ${escapeHTML(media.type.toUpperCase())}</span>`;
 
   lbSlotsArea.innerHTML = appData.slides
     .map((s, idx) => {
@@ -1172,9 +1359,7 @@ function updateLightboxUI() {
       const layout = appData.manifest.slideLayouts[slideNum] || "full-bleed";
       const limit = getLayoutLimit(slideNum);
 
-      const head = scrubText(s.head);
-      const sub = scrubText(s.sub);
-      const body = scrubText(s.body);
+      const { head, sub, body } = getSlideText(s);
 
       let statusHtml = "Empty";
       let isMain = slotData.mains && slotData.mains.includes(media.filename);
@@ -1196,9 +1381,9 @@ function updateLightboxUI() {
                     <div class="slot-status-pill">${statusHtml}</div>
                 </div>
                 <div class="slot-text-preview">
-                    ${head ? `<div class="slot-head">${head}</div>` : ""}
-                    ${sub ? `<div class="slot-sub">${sub}</div>` : ""}
-                    ${body ? `<div class="slot-body">${body}</div>` : ""}
+                    ${head ? `<div class="slot-head">${escapeHTML(head)}</div>` : ""}
+                    ${sub ? `<div class="slot-sub">${escapeHTML(sub)}</div>` : ""}
+                    ${body ? `<div class="slot-body">${escapeHTML(body)}</div>` : ""}
                 </div>
                 <div class="slot-action-bar">
                     <button class="slot-action-btn btn-main" onclick="assignSlotFromClick('${slideNum}', 'main', event)" ${dis}>${isMain ? "★ MAIN" : "SET MAIN"}</button>
@@ -1226,7 +1411,7 @@ function renderAssemblyNav() {
           (s) => `
                 <div class="nav-slide-card ${String(activeAssemblySlide) === String(s.slide) ? "active-nav" : ""}" draggable="true" data-slide="${s.slide}" onclick="switchAssemblySlide('${s.slide}')">
                     <div class="slide-num" style="margin-bottom: 4px;"><span class="drag-handle">::</span> Slide ${s.slide}</div>
-                    <div style="font-size: 13px; font-weight: 600; color:var(--text-main);">${scrubText(s.head) || "Untitled"}</div>
+                    <div style="font-size: 13px; font-weight: 600; color:var(--text-main);">${escapeHTML(getSlideText(s).head || "Untitled")}</div>
                 </div>
             `,
         )
@@ -1239,7 +1424,7 @@ function renderAssemblyNav() {
         (s) => `
             <div class="nav-slide-card ${String(activeAssemblySlide) === String(s.slide) ? "active-nav" : ""}" draggable="true" data-slide="${s.slide}" onclick="switchAssemblySlide('${s.slide}')">
                 <div class="slide-num" style="margin-bottom: 4px;"><span class="drag-handle">::</span> Slide ${s.slide}</div>
-                <div style="font-size: 13px; font-weight: 600; color:var(--text-main);">${scrubText(s.head) || "Untitled"}</div>
+                <div style="font-size: 13px; font-weight: 600; color:var(--text-main);">${escapeHTML(getSlideText(s).head || "Untitled")}</div>
             </div>
         `,
       )
@@ -1314,6 +1499,7 @@ window.shiftMain = function (slideNum, idx, dir) {
   saveManifest();
   updateInspectorUI();
   preloadAndRenderCanvas();
+  renderDeckHealth();
 };
 
 window.selectMediaSlot = function (slideNum, idx) {
@@ -1973,6 +2159,7 @@ function setActivePhase(targetPhase) {
   if (activePhase === "view-assembly" && activeAssemblySlide) {
     preloadAndRenderCanvas();
   }
+  if (activePhase === "view-export") renderDeckHealth();
 }
 
 document.querySelectorAll(".phase-btn").forEach((btn) => {
@@ -2112,9 +2299,23 @@ document.addEventListener("keydown", (e) => {
 });
 
 // --- EXPORT PIPELINES ---
+function confirmExportReadiness() {
+  renderDeckHealth();
+  const blockers = latestDeckHealth?.blockers || [];
+  if (blockers.length === 0) return true;
+  const sample = blockers
+    .slice(0, 3)
+    .map((item) => `- ${item.title}`)
+    .join("\n");
+  return window.confirm(
+    `Deck Health found ${blockers.length} export blocker${blockers.length === 1 ? "" : "s"}:\n\n${sample}\n\nContinue anyway?`,
+  );
+}
+
 document
   .getElementById("btn-export-media")
   ?.addEventListener("click", async (e) => {
+    if (!confirmExportReadiness()) return;
     const btn = e.target;
     btn.textContent = "Packaging Folder Assets...";
     btn.disabled = true;
@@ -2144,6 +2345,7 @@ document
 document
   .getElementById("btn-export-visuals")
   ?.addEventListener("click", async (e) => {
+    if (!confirmExportReadiness()) return;
     const btn = e.target;
     btn.textContent = "Rendering Canvases...";
     btn.disabled = true;
@@ -2190,6 +2392,7 @@ document
 document
   .getElementById("btn-export-specs")
   ?.addEventListener("click", async (e) => {
+    if (!confirmExportReadiness()) return;
     const btn = e.target;
     btn.textContent = "Generating Details...";
     btn.disabled = true;
@@ -2223,7 +2426,9 @@ document
       let pathsHtml = slotData.mains
         .map((filename) => {
           const m = appData.media.find((x) => x.filename === filename);
-          return m ? `<li>${m.path}</li>` : `<li>${filename}</li>`;
+          return m
+            ? `<li>${escapeHTML(m.path)}</li>`
+            : `<li>${escapeHTML(filename)}</li>`;
         })
         .join("");
 
@@ -2237,7 +2442,7 @@ document
                 <ul style="margin-left: 20px; font-family: monospace; font-size: 12px; margin-bottom: 16px;">${pathsHtml || "<li>No Mains Assigned</li>"}</ul>
                 <p><strong>Backups Reserved:</strong> ${slotData.backups.length}</p>
                 <p style="margin-top:24px;"><strong>Designer Notes:</strong></p>
-                <p style="white-space: pre-wrap; font-style: italic;">${notes}</p>
+                <p style="white-space: pre-wrap; font-style: italic;">${escapeHTML(notes)}</p>
             </div>
         `;
       pageDiv.insertBefore(img, pageDiv.firstChild);

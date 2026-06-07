@@ -88,7 +88,7 @@ git pull
 
 This is the most active tool.
 
-Current prototyper version: `v0.6.0`.
+Current prototyper version: `v0.7.0`.
 
 ### Mac
 

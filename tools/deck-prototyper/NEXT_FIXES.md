@@ -14,6 +14,8 @@ This is the working list distilled from the current prototyper feedback. Keep it
 - Assembly now has image-edge preview, fit width/height controls, and edge alignment controls.
 - Script now has explicit delete-slide support and clearer two-way sync wording.
 - Script cards now show word counts, media counts, direct Curation/Assembly jumps, and clearer file sync status.
+- Export now has Deck Health preflight with blockers, warnings, issue jumping, and export warnings.
+- Curation, Lightbox, Assembly navigation, and spec export now escape deck copy consistently.
 
 ## Highest Priority
 
@@ -32,6 +34,7 @@ This is the working list distilled from the current prototyper feedback. Keep it
    - Preserve the selected target slide when moving between grid and lightbox.
    - Make right-click, keyboard shortcuts, and lightbox buttons perform the same actions.
    - Keep menu and lightbox actions visible near screen edges.
+   - Add a GIF static-frame picker instead of relying on the browser thumbnail.
 
 ## Known Pain Points From Feedback
 
@@ -41,6 +44,7 @@ This is the working list distilled from the current prototyper feedback. Keep it
 - Sync between the web app and notepad file needs clearer two-way intent and conflict handling.
 - Tab 2 right-click behavior was brittle, especially near viewport edges.
 - Curation jumps too much when entering the lightbox flow.
+- Export now has a preflight layer, but visual export still needs better progress and failure details.
 - Tab 3 is the most important and still needs the deepest rebuild.
 - Switching a slide from one image to two images can leave the canvas and saved state feeling confused.
 - The old Mains/Backups assembly model felt weird and weak.
@@ -50,9 +54,9 @@ This is the working list distilled from the current prototyper feedback. Keep it
 
 ## Suggested Version Plan
 
-- `v0.7.0`: Curation/lightbox redesign, keyboard/right-click parity, GIF frame picker.
-- `v0.8.0`: Export preflight and final deck quality checks.
-- `v0.9.0`: Deeper script sync conflict preview and export preflight.
+- `v0.8.0`: Curation/lightbox redesign, keyboard/right-click parity, GIF frame picker.
+- `v0.9.0`: Export progress, failure details, and final deck quality checks.
+- `v1.0.0`: Deeper script sync conflict preview and first stable Mac release.
 
 ## GitHub Policy
 

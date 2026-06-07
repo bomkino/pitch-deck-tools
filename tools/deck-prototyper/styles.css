@@ -1176,14 +1176,23 @@ kbd {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 32px;
+}
+.export-workspace {
+    width: min(1180px, 100%);
+    display: grid;
+    grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.05fr);
+    gap: 20px;
+    align-items: stretch;
 }
 .export-card {
     background: var(--bg-panel);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 64px;
+    border-radius: var(--radius-md);
+    padding: 40px;
     text-align: center;
-    max-width: 540px;
+    max-width: none;
+    min-width: 0;
 }
 .export-card h2 {
     font-size: 28px;
@@ -1200,6 +1209,140 @@ kbd {
     padding: 16px 40px;
     font-size: 16px;
     width: 100%;
+}
+.deck-health-card {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 48%),
+        var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 28px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.deck-health-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+.deck-health-header h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+.deck-health-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.5;
+}
+.deck-health-score {
+    flex: 0 0 auto;
+    min-width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-base);
+    color: var(--text-main);
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+.deck-health-score.is-ready {
+    border-color: rgba(91, 214, 138, 0.6);
+    box-shadow: 0 0 36px rgba(91, 214, 138, 0.12);
+}
+.deck-health-score.has-blockers {
+    border-color: rgba(255, 71, 126, 0.75);
+    box-shadow: 0 0 36px rgba(255, 71, 126, 0.14);
+}
+.deck-health-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+.deck-health-stat {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 10px;
+}
+.deck-health-stat strong,
+.deck-health-stat span {
+    display: block;
+}
+.deck-health-stat strong {
+    color: var(--text-main);
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+}
+.deck-health-stat span {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+    text-transform: uppercase;
+}
+.deck-health-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 160px;
+}
+.deck-health-item {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-base);
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 12px;
+    text-align: left;
+    transition: var(--transition);
+}
+.deck-health-item:hover {
+    border-color: var(--text-muted);
+    transform: translateY(-1px);
+}
+.deck-health-item.blocker {
+    border-color: rgba(255, 71, 126, 0.35);
+}
+.deck-health-item.warning {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+.deck-health-item strong,
+.deck-health-item span {
+    display: block;
+}
+.deck-health-item strong {
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+.deck-health-item span,
+.deck-health-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+.deck-health-empty {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 18px;
+}
+.deck-health-more {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 4px;
+    text-align: center;
+    text-transform: uppercase;
+}
+.deck-health-action {
+    flex: none;
 }
 
 /* --- INSPECTOR MEDIA TABS --- */
@@ -1462,6 +1605,9 @@ kbd {
     .curation-reference-sidebar {
         flex-basis: 260px;
     }
+    .export-workspace {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 760px) {
@@ -1659,6 +1805,20 @@ kbd {
     outline: 2px solid transparent;
     outline-offset: -2px;
     position: relative;
+}
+.slot-row.focused-slot {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.055);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.slot-row.active-main {
+    border-color: rgba(255, 71, 126, 0.72);
+    background: rgba(255, 71, 126, 0.12);
+}
+.slot-row.active-main.focused-slot {
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+        0 18px 42px rgba(255, 71, 126, 0.08);
 }
 .slot-header {
     display: flex;
