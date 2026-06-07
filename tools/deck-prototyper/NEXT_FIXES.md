@@ -13,6 +13,7 @@ This is the working list distilled from the current prototyper feedback. Keep it
 - Assembly now has explicit media slot cards and per-slot pan/scale/mirror state.
 - Assembly now has image-edge preview, fit width/height controls, and edge alignment controls.
 - Script now has explicit delete-slide support and clearer two-way sync wording.
+- Script cards now show word counts, media counts, direct Curation/Assembly jumps, and clearer file sync status.
 
 ## Highest Priority
 
@@ -32,15 +33,10 @@ This is the working list distilled from the current prototyper feedback. Keep it
    - Make right-click, keyboard shortcuts, and lightbox buttons perform the same actions.
    - Keep menu and lightbox actions visible near screen edges.
 
-4. Script editing needs a cleaner foundation.
-   - Make slide cards easier to scan and edit.
-   - Add clearer dirty/saved state for web edits versus file edits.
-   - Add a deliberate two-way sync choice: browser to file, or file to browser.
-
 ## Known Pain Points From Feedback
 
-- Tab 1 feels ugly and hard to adjust text in.
-- Tab 1 supports adding, deleting, and reordering slides; it still needs a calmer visual redesign.
+- Tab 1 is improved, but still needs duplicate controls and a better long-body editing surface.
+- Tab 1 supports adding, deleting, and reordering slides; it now needs smaller polish.
 - Media count per slide is too hard to understand and should default to one image.
 - Sync between the web app and notepad file needs clearer two-way intent and conflict handling.
 - Tab 2 right-click behavior was brittle, especially near viewport edges.
@@ -54,9 +50,9 @@ This is the working list distilled from the current prototyper feedback. Keep it
 
 ## Suggested Version Plan
 
-- `v0.6.0`: Curation/lightbox redesign, keyboard/right-click parity, GIF frame picker.
-- `v0.7.0`: Export preflight and final deck quality checks.
-- `v0.8.0`: Deeper script sync conflict preview and export preflight.
+- `v0.7.0`: Curation/lightbox redesign, keyboard/right-click parity, GIF frame picker.
+- `v0.8.0`: Export preflight and final deck quality checks.
+- `v0.9.0`: Deeper script sync conflict preview and export preflight.
 
 ## GitHub Policy
 

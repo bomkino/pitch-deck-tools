@@ -20,7 +20,7 @@ It is designed around four steps:
 
 ## Version
 
-Current prototyper app version: `v0.5.0`
+Current prototyper app version: `v0.6.0`
 
 Changes are tracked in `CHANGELOG.md`.
 

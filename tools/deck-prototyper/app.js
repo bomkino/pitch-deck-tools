@@ -15,6 +15,8 @@ let activeMediaSlotIndex = 0;
 let scriptSyncTimer = null;
 let draggedSlideNum = null;
 let pointerSlideDrag = null;
+let scriptSyncDirty = false;
+let deckCopyStatus = null;
 
 let availableFolders = new Set();
 let selectedFolder = "All";
@@ -30,6 +32,7 @@ const folderSelect = document.getElementById("folder-filter");
 const typeSelect = document.getElementById("type-filter");
 const mediaCountEl = document.getElementById("media-count");
 const thumbSliderElement = document.getElementById("thumb-slider");
+const scriptSyncStatus = document.getElementById("script-sync-status");
 
 const assemblyCanvas = document.getElementById("assembly-canvas");
 const ctx = assemblyCanvas ? assemblyCanvas.getContext("2d") : null;
@@ -132,7 +135,31 @@ async function saveManifest() {
   }
 }
 
+function formatDeckCopyTime() {
+  if (!deckCopyStatus?.mtime) return "";
+  const date = new Date(deckCopyStatus.mtime * 1000);
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function updateScriptSyncStatus() {
+  if (!scriptSyncStatus) return;
+  scriptSyncStatus.classList.toggle("is-dirty", scriptSyncDirty);
+  if (scriptSyncDirty) {
+    scriptSyncStatus.textContent = "Browser edits pending";
+    return;
+  }
+  const source = deckCopyStatus?.source || "deck-copy.txt";
+  const time = formatDeckCopyTime();
+  scriptSyncStatus.textContent = time ? `${source} synced ${time}` : "File synced";
+}
+
+window.markScriptDirty = function () {
+  scriptSyncDirty = true;
+  updateScriptSyncStatus();
+};
+
 async function syncScriptToFile() {
+  if (scriptSyncTimer) clearTimeout(scriptSyncTimer);
   saveStatus.textContent = "Syncing...";
   try {
     const payload = appData.slides.map((s) => {
@@ -145,6 +172,12 @@ async function syncScriptToFile() {
       };
     });
     await fetch("/api/sync", { method: "POST", body: JSON.stringify(payload) });
+    scriptSyncDirty = false;
+    deckCopyStatus = {
+      source: "deck-copy.txt",
+      mtime: Date.now() / 1000,
+    };
+    updateScriptSyncStatus();
     setTimeout(() => (saveStatus.textContent = "deck-copy.txt updated"), 1500);
   } catch (e) {
     saveStatus.textContent = "Sync Failed!";
@@ -154,15 +187,23 @@ async function syncScriptToFile() {
 
 function scheduleScriptFileSync() {
   if (scriptSyncTimer) clearTimeout(scriptSyncTimer);
-  scriptSyncTimer = setTimeout(syncScriptToFile, 700);
+  scriptSyncDirty = true;
+  updateScriptSyncStatus();
 }
 
 async function reloadScriptFromFile() {
+  if (scriptSyncDirty) {
+    const ok = window.confirm(
+      "Reload deck-copy.txt and discard browser edits that have not been synced to file?",
+    );
+    if (!ok) return;
+  }
   saveStatus.textContent = "Reloading deck-copy.txt...";
   try {
     const response = await fetch(`/api/data?ts=${Date.now()}`);
     const freshData = await response.json();
     appData.slides = freshData.slides;
+    deckCopyStatus = freshData.deckCopy || null;
     appData.manifest.customText = {};
     if (appData.slides.length > 0) {
       activeAssemblySlide = String(appData.slides[0].slide);
@@ -172,6 +213,8 @@ async function reloadScriptFromFile() {
       targetCurationSlide = null;
     }
     await saveManifest();
+    scriptSyncDirty = false;
+    updateScriptSyncStatus();
     renderAllViews();
     saveStatus.textContent = "Loaded from deck-copy.txt";
   } catch (e) {
@@ -216,8 +259,10 @@ async function init() {
     const response = await fetch("/api/data");
     appData = await response.json();
     ensureManifestShape();
+    deckCopyStatus = appData.deckCopy || null;
     document.getElementById("app-version").textContent =
-      `v${appData.appVersion || "0.5.0"}`;
+      `v${appData.appVersion || "0.6.0"}`;
+    updateScriptSyncStatus();
 
     for (const slide in appData.manifest.slideSlots) {
       const slot = appData.manifest.slideSlots[slide];
@@ -291,16 +336,25 @@ function renderScriptTab() {
       const head = scrubText(custom.head !== undefined ? custom.head : s.head);
       const sub = scrubText(custom.sub !== undefined ? custom.sub : s.sub);
       const body = scrubText(custom.body !== undefined ? custom.body : s.body);
+      const assignedCount = getSlideAssignedMediaCount(s.slide);
+      const slotLimit = getLayoutSlotCount(layout);
+      const words = countSlideWords(head, sub, body);
       const isFirst = idx === 0;
       const isLast = idx === appData.slides.length - 1;
 
       return `
             <div class="outline-slide" draggable="true" data-slide="${s.slide}">
                 <div class="slide-num-container">
-                    <span class="slide-num"><span class="drag-handle">::</span> Slide ${s.slide}</span>
+                    <div class="script-card-title">
+                        <span class="slide-num"><span class="drag-handle">::</span> Slide ${s.slide}</span>
+                        <span class="script-card-meta">${words} words</span>
+                        <span class="script-card-meta">${assignedCount}/${slotLimit} media</span>
+                    </div>
                     <div class="slide-card-tools">
                         <button class="mini-btn" onclick="moveSlide('${s.slide}', -1)" ${isFirst ? "disabled" : ""}>Up</button>
                         <button class="mini-btn" onclick="moveSlide('${s.slide}', 1)" ${isLast ? "disabled" : ""}>Down</button>
+                        <button class="mini-btn" onclick="focusSlideWorkflow('${s.slide}', 'view-curation')">Curate</button>
+                        <button class="mini-btn" onclick="focusSlideWorkflow('${s.slide}', 'view-assembly')">Assemble</button>
                         <button class="mini-btn" onclick="addSlideAfter('${s.slide}')">Add After</button>
                         <button class="mini-btn danger-mini-btn" onclick="deleteSlide('${s.slide}')">Delete</button>
                     </div>
@@ -311,9 +365,9 @@ function renderScriptTab() {
                         <option value="text-only" ${layout === "text-only" ? "selected" : ""}>Text Only (0 Img)</option>
                     </select>
                 </div>
-                <input type="text" class="edit-input" placeholder="Headline..." value="${escapeHTML(head)}" onblur="saveScriptEdit('${s.slide}', 'head', this.value)">
-                <input type="text" class="edit-input sub" placeholder="Subhead..." value="${escapeHTML(sub)}" onblur="saveScriptEdit('${s.slide}', 'sub', this.value)">
-                <textarea class="edit-textarea" placeholder="Body copy..." oninput="autoResizeTextarea(this)" onblur="saveScriptEdit('${s.slide}', 'body', this.value)">${escapeHTML(body)}</textarea>
+                <input type="text" class="edit-input" placeholder="Headline..." value="${escapeHTML(head)}" oninput="markScriptDirty()" onblur="saveScriptEdit('${s.slide}', 'head', this.value)">
+                <input type="text" class="edit-input sub" placeholder="Subhead..." value="${escapeHTML(sub)}" oninput="markScriptDirty()" onblur="saveScriptEdit('${s.slide}', 'sub', this.value)">
+                <textarea class="edit-textarea" placeholder="Body copy..." oninput="markScriptDirty(); autoResizeTextarea(this)" onblur="saveScriptEdit('${s.slide}', 'body', this.value)">${escapeHTML(body)}</textarea>
             </div>
         `;
     })
@@ -327,8 +381,44 @@ window.saveScriptLayout = function (slideNum, layout) {
   normalizeSlideSlots();
   clampActiveMediaSlot(slideNum);
   saveManifest();
+  renderScriptTab();
   updateInspectorUI();
   if (String(activeAssemblySlide) === String(slideNum)) {
+    preloadAndRenderCanvas();
+  }
+};
+
+function countSlideWords(...parts) {
+  return parts
+    .join(" ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+function getLayoutSlotCount(layout) {
+  if (layout === "text-only") return 0;
+  if (layout === "split") return 2;
+  if (layout === "grid") return 12;
+  return 1;
+}
+
+function getSlideAssignedMediaCount(slideNum) {
+  const slot = appData.manifest.slideSlots?.[slideNum];
+  if (!slot?.mains) return 0;
+  return slot.mains.filter(Boolean).length;
+}
+
+window.focusSlideWorkflow = function (slideNum, targetView) {
+  activeAssemblySlide = String(slideNum);
+  targetCurationSlide = String(slideNum);
+  if (targetView === "view-curation") {
+    setActivePhase("view-curation");
+    renderCurationSidebar();
+  } else {
+    setActivePhase("view-assembly");
+    renderAssemblyNav();
+    updateInspectorUI();
     preloadAndRenderCanvas();
   }
 };
@@ -371,6 +461,7 @@ window.saveScriptEdit = function (slideNum, field, value) {
   if (slide) slide[field] = value;
   saveManifest();
   scheduleScriptFileSync();
+  renderScriptTab();
   renderCurationSidebar();
   if (
     activePhase === "view-assembly" &&
@@ -1863,21 +1954,29 @@ window.removeSlideMedia = function (slideNum, filename, role) {
   preloadAndRenderCanvas();
 };
 
+function setActivePhase(targetPhase) {
+  const targetButton = document.querySelector(
+    `.phase-btn[data-target="${targetPhase}"]`,
+  );
+  const targetView = document.getElementById(targetPhase);
+  if (!targetButton || !targetView) return;
+  document
+    .querySelectorAll(".phase-btn")
+    .forEach((b) => b.classList.remove("active"));
+  document
+    .querySelectorAll(".view-layer")
+    .forEach((v) => v.classList.remove("active"));
+  targetButton.classList.add("active");
+  targetView.classList.add("active");
+  activePhase = targetPhase;
+  if (activePhase === "view-curation") applyFiltersAndRenderGrid();
+  if (activePhase === "view-assembly" && activeAssemblySlide) {
+    preloadAndRenderCanvas();
+  }
+}
+
 document.querySelectorAll(".phase-btn").forEach((btn) => {
-  btn.addEventListener("click", (e) => {
-    document
-      .querySelectorAll(".phase-btn")
-      .forEach((b) => b.classList.remove("active"));
-    document
-      .querySelectorAll(".view-layer")
-      .forEach((v) => v.classList.remove("active"));
-    e.target.classList.add("active");
-    activePhase = e.target.dataset.target;
-    document.getElementById(activePhase).classList.add("active");
-    if (activePhase === "view-curation") applyFiltersAndRenderGrid();
-    if (activePhase === "view-assembly" && activeAssemblySlide)
-      preloadAndRenderCanvas();
-  });
+  btn.addEventListener("click", (e) => setActivePhase(e.target.dataset.target));
 });
 
 window.addEventListener("mousemove", () => {

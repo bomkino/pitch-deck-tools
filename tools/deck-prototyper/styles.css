@@ -285,9 +285,26 @@ main {
 }
 .script-actions {
     display: flex;
+    align-items: center;
     gap: 8px;
     flex-wrap: wrap;
     justify-content: flex-end;
+}
+.script-sync-status {
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-muted);
+    background: var(--bg-base);
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.script-sync-status.is-dirty {
+    color: var(--accent);
+    border-color: rgba(255, 71, 126, 0.45);
+    background: rgba(255, 71, 126, 0.08);
 }
 
 /* Tab 1: Script */
@@ -300,8 +317,8 @@ main {
 .outline-slide {
     background: var(--bg-panel);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 32px;
+    border-radius: var(--radius-md);
+    padding: 24px;
     display: flex;
     flex-direction: column;
     transition: var(--transition);
@@ -365,9 +382,16 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
     gap: 12px;
     flex-wrap: wrap;
+}
+.script-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 180px;
 }
 .slide-num {
     font-size: 12px;
@@ -375,6 +399,16 @@ main {
     text-transform: uppercase;
     letter-spacing: 0.1em;
     font-weight: 700;
+}
+.script-card-meta {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 8px;
+    white-space: nowrap;
 }
 .layout-select {
     background: var(--bg-base);
@@ -391,6 +425,8 @@ main {
     display: flex;
     gap: 6px;
     margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 .mini-btn {
     background: var(--bg-base);
@@ -423,16 +459,16 @@ main {
 
 .edit-input {
     width: 100%;
-    background: transparent;
-    border: 1px solid transparent;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
     color: var(--text-main);
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     font-family: inherit;
     outline: none;
     transition: 0.2s;
-    padding: 8px;
+    padding: 12px;
     border-radius: var(--radius-sm);
 }
 .edit-input.sub {
@@ -443,8 +479,8 @@ main {
 }
 .edit-textarea {
     width: 100%;
-    background: transparent;
-    border: 1px solid transparent;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
     color: var(--text-muted);
     font-size: 14px;
     line-height: 1.6;
@@ -453,14 +489,14 @@ main {
     resize: none;
     min-height: 120px;
     transition: 0.2s;
-    padding: 8px;
+    padding: 12px;
     border-radius: var(--radius-sm);
     overflow: hidden;
 }
 .edit-input:focus,
 .edit-textarea:focus {
-    border-color: var(--border);
-    background: var(--bg-base);
+    border-color: var(--text-muted);
+    background: #0b0b0b;
 }
 
 /* Tab 2: Curation */

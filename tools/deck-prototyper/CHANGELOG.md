@@ -1,5 +1,15 @@
 # Deck Prototyper Changelog
 
+## v0.6.0 - 2026-06-08
+
+- Redesigned the Script tab cards so each slide is easier to scan while editing.
+- Added per-slide word counts and media slot counts beside each slide number.
+- Added Script card actions to jump the active slide straight into Curation or Assembly.
+- Added a visible browser/file sync status for `deck-copy.txt`.
+- Changed text edits to save in the browser first, then sync deliberately to `deck-copy.txt`.
+- Added a reload warning when browser edits have not been synced to file.
+- Exposed the current `deck-copy.txt` source and modified time through the local data API.
+
 ## v0.5.0 - 2026-06-01
 
 - Added an Assembly toggle to show the selected image edge while framing media.

@@ -22,7 +22,7 @@ COPY_FILE = PROJECT_DIR / "deck-copy.txt"
 EXAMPLE_COPY_FILE = PROJECT_DIR / "deck-copy.example.txt"
 PORT = int(os.environ.get("PORT", "8000"))
 OPEN_BROWSER = os.environ.get("PROTOTYPER_OPEN_BROWSER", "1") != "0"
-APP_VERSION = "0.5.0"
+APP_VERSION = "0.6.0"
 
 RESET_COPY = """=== 1 ===
 HEAD: Untitled Slide
@@ -78,6 +78,16 @@ def scan_media():
                         }
                     )
     return media
+
+
+def deck_copy_status():
+    source_file = COPY_FILE if COPY_FILE.exists() else EXAMPLE_COPY_FILE
+    if not source_file.exists():
+        return {"source": None, "mtime": None}
+    return {
+        "source": source_file.name,
+        "mtime": source_file.stat().st_mtime,
+    }
 
 
 def write_deck_copy(slides):
@@ -180,6 +190,7 @@ class PrototyperHandler(http.server.SimpleHTTPRequestHandler):
                 "appVersion": APP_VERSION,
                 "slides": parse_deck_copy(),
                 "media": scan_media(),
+                "deckCopy": deck_copy_status(),
                 "manifest": json.loads(MANIFEST_FILE.read_text(encoding="utf-8"))
                 if MANIFEST_FILE.exists()
                 else {},

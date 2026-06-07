@@ -12,7 +12,7 @@ For an even slower walkthrough, see [docs/getting-started.md](docs/getting-start
 | --- | --- | --- |
 | Asset Browser | `tools/asset-browser` | Scans a folder of images, fonts, downloads, and references into a searchable local browser. |
 | Font Previewer | `tools/font-previewer` | Lets you compare fonts quickly in large visual type boards. |
-| Deck Prototyper | `tools/deck-prototyper` | Helps turn copy and media into rough visual pitch-deck frames. |
+| Deck Prototyper | `tools/deck-prototyper` | Helps turn copy and media into rough visual pitch-deck frames. Currently the most active tool. |
 
 ## Screenshots
 
@@ -87,6 +87,8 @@ git pull
 ## Run The Deck Prototyper
 
 This is the most active tool.
+
+Current prototyper version: `v0.6.0`.
 
 ### Mac
 
