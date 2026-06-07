@@ -16,6 +16,7 @@ This is the working list distilled from the current prototyper feedback. Keep it
 - Script cards now show word counts, media counts, direct Curation/Assembly jumps, and clearer file sync status.
 - Export now has Deck Health preflight with blockers, warnings, issue jumping, and export warnings.
 - Curation, Lightbox, Assembly navigation, and spec export now escape deck copy consistently.
+- Curation now has a target summary, per-slide status rail, next-issue shortcut, and one-click media-card assignment.
 
 ## Highest Priority
 
@@ -54,8 +55,7 @@ This is the working list distilled from the current prototyper feedback. Keep it
 
 ## Suggested Version Plan
 
-- `v0.8.0`: Curation/lightbox redesign, keyboard/right-click parity, GIF frame picker.
-- `v0.9.0`: Export progress, failure details, and final deck quality checks.
+- `v0.9.0`: GIF static-frame picker, export progress, failure details, and final deck quality checks.
 - `v1.0.0`: Deeper script sync conflict preview and first stable Mac release.
 
 ## GitHub Policy

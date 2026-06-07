@@ -1,5 +1,14 @@
 # Deck Prototyper Changelog
 
+## v0.8.0 - 2026-06-08
+
+- Added a Curation target summary so the current slide, status, layout, and media count stay visible above the media grid.
+- Added a next-issue action and `N` keyboard shortcut for moving through slides that still need visual attention.
+- Redesigned the Curation script rail with per-slide status, layout, main-media count, alternate count, and a direct Assembly jump.
+- Added one-click Set main actions directly on media cards for the active target slide.
+- Kept Lightbox assignment synced with the same target slide summary used in Curation.
+- Escaped media badges and folder dropdown labels more consistently.
+
 ## v0.7.0 - 2026-06-08
 
 - Added a Deck Health panel in Export with a readiness score, slide stats, blockers, and warnings.

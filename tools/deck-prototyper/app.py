@@ -22,7 +22,7 @@ COPY_FILE = PROJECT_DIR / "deck-copy.txt"
 EXAMPLE_COPY_FILE = PROJECT_DIR / "deck-copy.example.txt"
 PORT = int(os.environ.get("PORT", "8000"))
 OPEN_BROWSER = os.environ.get("PROTOTYPER_OPEN_BROWSER", "1") != "0"
-APP_VERSION = "0.7.0"
+APP_VERSION = "0.8.0"
 
 RESET_COPY = """=== 1 ===
 HEAD: Untitled Slide
