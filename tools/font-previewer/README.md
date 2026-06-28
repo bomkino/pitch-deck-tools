@@ -43,3 +43,15 @@ PORT=8030 ./start-font-previewer.sh
 ## Why It Exists
 
 Deck typography is hard to judge from a font menu. Big type boards make it easier to compare tone, texture, readability, and personality.
+
+## Next Focus
+
+The next major work pass should focus on making this tool feel like a proper font lab for pitch decks:
+
+- clearer font importing
+- better sample text presets
+- stronger compare views
+- saved/exportable type boards
+- noob-friendly offline use on Mac and Linux
+
+See the Font Previewer section in `../../docs/todo.md`.

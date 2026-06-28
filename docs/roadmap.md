@@ -2,6 +2,8 @@
 
 This project starts with three tools and can grow into a practical deck-making toolkit.
 
+For the current working to-do list, see [todo.md](todo.md). For project handover context, see [handover.md](handover.md).
+
 ## Now
 
 - Clean up the project structure.
@@ -23,4 +25,3 @@ This project starts with three tools and can grow into a practical deck-making t
 - Add reusable deck templates.
 - Add better media organization workflows.
 - Add visual critique/checklist helpers for pitch deck makers.
-
