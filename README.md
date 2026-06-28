@@ -6,6 +6,13 @@ This repo is beginner-friendly on purpose. If you have never used GitHub before,
 
 For an even slower walkthrough, see [docs/getting-started.md](docs/getting-started.md).
 
+If you are taking over the project, working offline, or starting a fresh Codex chat, read:
+
+- [docs/handover.md](docs/handover.md)
+- [docs/todo.md](docs/todo.md)
+- [docs/offline-workflow.md](docs/offline-workflow.md)
+- [docs/new-chat-brief.md](docs/new-chat-brief.md)
+
 ## What Is Inside
 
 | Tool | Folder | What it does |
@@ -193,6 +200,10 @@ The repo is set up to ignore common private/local files like:
 - Font files and private media formats
 
 More detail: [docs/assets-and-privacy.md](docs/assets-and-privacy.md)
+
+## Project Handover
+
+The latest handover lives in [docs/handover.md](docs/handover.md). The active to-do list lives in [docs/todo.md](docs/todo.md).
 
 ## If Something Goes Wrong
 

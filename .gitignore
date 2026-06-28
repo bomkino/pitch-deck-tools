@@ -6,6 +6,7 @@ __pycache__/
 
 # Private client/project material
 private/
+OFFLINE_HANDOVER/
 
 # Deck prototyper local working state
 tools/deck-prototyper/_media/
