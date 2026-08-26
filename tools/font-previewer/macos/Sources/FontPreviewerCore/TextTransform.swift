@@ -1,6 +1,6 @@
 import Foundation
 
-public enum TextTransform {
+public enum SpecimenTextTransform {
     private static let apMinorWords: Set<String> = [
         "a", "an", "and", "as", "at", "but", "by", "for", "from", "if", "in", "into",
         "nor", "of", "off", "on", "onto", "or", "over", "per", "so", "the", "to", "up",
@@ -9,96 +9,77 @@ public enum TextTransform {
 
     public static func apply(_ casing: TextCasing, to text: String) -> String {
         switch casing {
-        case .exact:
-            return text
-        case .uppercase:
-            return text.uppercased()
-        case .lowercase:
-            return text.lowercased()
-        case .title:
-            return transformWords(in: text) { word, _, _ in titleWord(word) }
-        case .apTitle:
-            return apTitleCase(text)
+        case .exact: return text
+        case .uppercase: return text.uppercased()
+        case .lowercase: return text.lowercased()
+        case .title: return titleCase(text, apStyle: false)
+        case .apTitle: return titleCase(text, apStyle: true)
         }
     }
 
     public static func apTitleCase(_ text: String) -> String {
-        let ranges = wordRanges(in: text)
-        guard let first = ranges.first, let last = ranges.last else { return text }
+        titleCase(text, apStyle: true)
+    }
 
+    private static func titleCase(_ text: String, apStyle: Bool) -> String {
+        let ranges = lexicalWordRanges(in: text)
+        guard !ranges.isEmpty else { return text }
         var output = text
-        for range in ranges.reversed() {
+
+        for offset in ranges.indices.reversed() {
+            let range = ranges[offset]
             let raw = String(text[range])
-            let core = normalizedCore(raw)
-            let isEdge = range == first || range == last
+            let lower = raw.lowercased()
+            let edge = offset == ranges.startIndex || offset == ranges.index(before: ranges.endIndex)
             let replacement: String
-            if !isEdge && apMinorWords.contains(core.lowercased()) {
-                replacement = replaceCore(in: raw, with: core.lowercased())
+            if apStyle && !edge && apMinorWords.contains(lower) {
+                replacement = lower
             } else {
-                replacement = replaceCore(in: raw, with: titleWord(core))
+                replacement = capitalizeCompound(lower)
             }
             output.replaceSubrange(range, with: replacement)
         }
         return output
     }
 
-    private static func transformWords(
-        in text: String,
-        transform: (_ word: String, _ index: Int, _ count: Int) -> String
-    ) -> String {
-        let ranges = wordRanges(in: text)
-        var output = text
-        for (reverseIndex, range) in ranges.reversed().enumerated() {
-            let index = ranges.count - 1 - reverseIndex
-            let raw = String(text[range])
-            let core = normalizedCore(raw)
-            let replacement = replaceCore(in: raw, with: transform(core, index, ranges.count))
-            output.replaceSubrange(range, with: replacement)
-        }
-        return output
-    }
-
-    private static func wordRanges(in text: String) -> [Range<String.Index>] {
-        var ranges: [Range<String.Index>] = []
+    private static func lexicalWordRanges(in text: String) -> [Range<String.Index>] {
+        var result: [Range<String.Index>] = []
         var start: String.Index?
-        var index = text.startIndex
+        var cursor = text.startIndex
 
-        while index < text.endIndex {
-            let character = text[index]
-            if character.isWhitespace {
-                if let start {
-                    ranges.append(start..<index)
-                    selfReset(&start)
-                }
-            } else if start == nil {
-                start = index
+        while cursor < text.endIndex {
+            let character = text[cursor]
+            let isCore = character.isLetter || character.isNumber
+            let isJoiner = (character == "-" || character == "’" || character == "'")
+                && start != nil
+                && text.index(after: cursor) < text.endIndex
+                && (text[text.index(after: cursor)].isLetter || text[text.index(after: cursor)].isNumber)
+
+            if isCore || isJoiner {
+                if start == nil { start = cursor }
+            } else if let wordStart = start {
+                result.append(wordStart..<cursor)
+                start = nil
             }
-            index = text.index(after: index)
+            cursor = text.index(after: cursor)
         }
-        if let start { ranges.append(start..<text.endIndex) }
-        return ranges
-    }
-
-    private static func selfReset(_ value: inout String.Index?) {
-        value = nil
-    }
-
-    private static func normalizedCore(_ raw: String) -> String {
-        raw.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-    }
-
-    private static func replaceCore(in raw: String, with replacement: String) -> String {
-        guard !raw.isEmpty else { return raw }
-        guard let start = raw.firstIndex(where: { $0.isLetter || $0.isNumber }) else { return raw }
-        guard let endCharacter = raw.lastIndex(where: { $0.isLetter || $0.isNumber }) else { return raw }
-        let end = raw.index(after: endCharacter)
-        var result = raw
-        result.replaceSubrange(start..<end, with: replacement)
+        if let wordStart = start { result.append(wordStart..<text.endIndex) }
         return result
     }
 
-    private static func titleWord(_ word: String) -> String {
-        guard let first = word.first else { return word }
-        return String(first).uppercased() + word.dropFirst().lowercased()
+    private static func capitalizeCompound(_ value: String) -> String {
+        var output = ""
+        var shouldCapitalize = true
+        for character in value {
+            if shouldCapitalize && character.isLetter {
+                output += String(character).uppercased()
+                shouldCapitalize = false
+            } else {
+                output.append(character)
+            }
+            if character == "-" { shouldCapitalize = true }
+            if character == "’" || character == "'" { shouldCapitalize = false }
+        }
+        return output
     }
 }

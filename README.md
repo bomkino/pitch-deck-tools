@@ -2,98 +2,77 @@
 
 Local, open-source tools by pitch.dog for people who want to make better pitch decks.
 
-This repo is beginner-friendly on purpose. If you have never used GitHub before, start here and go slowly. You do not need to be a professional coder to run these tools.
+This repo is beginner-friendly on purpose. You do not need to become a developer before the tools become useful. Start with [`docs/getting-started.md`](docs/getting-started.md).
 
-For an even slower walkthrough, see [docs/getting-started.md](docs/getting-started.md).
+For project continuity, read:
 
-If you are taking over the project, working offline, or starting a fresh Codex chat, read:
+- [`docs/handover.md`](docs/handover.md)
+- [`docs/todo.md`](docs/todo.md)
+- [`docs/offline-workflow.md`](docs/offline-workflow.md)
+- [`docs/new-chat-brief.md`](docs/new-chat-brief.md)
 
-- [docs/handover.md](docs/handover.md)
-- [docs/todo.md](docs/todo.md)
-- [docs/offline-workflow.md](docs/offline-workflow.md)
-- [docs/new-chat-brief.md](docs/new-chat-brief.md)
+## What is inside
 
-## What Is Inside
+| Tool | Folder | Platform | What it does |
+| --- | --- | --- | --- |
+| Asset Browser | `tools/asset-browser` | Mac / Linux browser tool | Turns a messy local asset folder into a searchable visual index. |
+| Font Previewer | `tools/font-previewer` | **macOS 13+ native app** | Reviews font files, collections, axes, features, coverage, pairings, and exportable deck specimens without installing or uploading them. |
+| Deck Prototyper | `tools/deck-prototyper` | Mac / Linux browser tool | Turns deck copy and local media into rough slide frames. |
 
-| Tool | Folder | What it does |
-| --- | --- | --- |
-| Asset Browser | `tools/asset-browser` | Scans a folder of images, fonts, downloads, and references into a searchable local browser. |
-| Font Previewer | `tools/font-previewer` | Lets you compare fonts quickly in large visual type boards. |
-| Deck Prototyper | `tools/deck-prototyper` | Helps turn copy and media into rough visual pitch-deck frames. Currently the most active tool. |
+## Who this helps
 
-## Screenshots
+- filmmakers and producers building pitch materials;
+- founders preparing an investor deck;
+- students and first-time creators learning how decks work;
+- small teams organising visual research;
+- deck makers who need faster local tools for messy early-stage work.
 
-### Asset Browser
+## Get the project
 
-![Asset Browser showing a searchable local asset index](docs/images/asset-browser.svg)
-
-### Font Previewer
-
-![Font Previewer showing a drop zone for font files](docs/images/font-previewer.svg)
-
-### Deck Prototyper
-
-![Deck Prototyper showing sample pitch deck cards](docs/images/deck-prototyper.svg)
-
-## Who This Helps
-
-This project is for people who need to make a pitch deck but cannot afford a professional deck team yet:
-
-- founders preparing an investor deck
-- filmmakers and producers making pitch materials
-- students and first-time creators learning how decks work
-- small teams who need better visual organization
-- deck makers who want faster local tools for messy early-stage work
-
-## What You Need
-
-- A Mac or Linux computer.
-- Python 3.
-- Git, or GitHub Desktop if you prefer a visual app.
-- A web browser. Brave Browser Beta is what we use most often, but Chrome, Safari, Firefox, and other modern browsers should work.
-
-### Check Python
-
-Open Terminal and run:
-
-```bash
-python3 --version
-```
-
-If you see a version number, you are good.
-
-If Python is missing:
-
-- Mac: install Python from [python.org](https://www.python.org/downloads/) or install Xcode Command Line Tools when macOS asks.
-- Linux: use your package manager, for example `sudo apt install python3 python3-pil` on Ubuntu/Debian.
-
-## Get The Project From GitHub
-
-### Option A: GitHub Desktop
+### GitHub Desktop
 
 1. Install GitHub Desktop.
-2. Open this repo on GitHub.
-3. Click `Code`.
-4. Choose `Open with GitHub Desktop`.
-5. Pick a folder on your computer.
-6. Click `Clone`.
+2. Open this repository on GitHub.
+3. Click `Code` → `Open with GitHub Desktop`.
+4. Choose a local folder and clone.
 
-### Option B: Terminal
+### Terminal
 
 ```bash
 git clone https://github.com/bomkino/pitch-deck-tools.git
 cd pitch-deck-tools
 ```
 
-To get updates later:
+Update later with GitHub Desktop’s **Pull origin**, or:
 
 ```bash
 git pull
 ```
 
-## Run The Deck Prototyper
+## Font Previewer — native Mac app
 
-This is the most active tool.
+Font Previewer is now Mac-only by design. It uses CoreText directly, opens files and folders without installing fonts, saves readable `.pitchfontstudy` documents, watches source files, and exports PNG, PDF, JSON, and Markdown through one renderer.
+
+Requirements:
+
+- macOS 13 Ventura or newer;
+- Apple command-line developer tools for source builds.
+
+Build, test, package, verify, and install:
+
+```text
+tools/font-previewer/build-font-previewer-app.command
+```
+
+Build without touching `/Applications`:
+
+```bash
+tools/font-previewer/build-font-previewer-app.command --no-install
+```
+
+Read [`tools/font-previewer/README.md`](tools/font-previewer/README.md) before working on it. The older HTML pages remain as legacy reference, not the current product.
+
+## Deck Prototyper
 
 Current prototyper version: `v0.8.0`.
 
@@ -105,7 +84,7 @@ Double-click:
 tools/deck-prototyper/start-prototyper.command
 ```
 
-Or use Terminal:
+Or:
 
 ```bash
 cd tools/deck-prototyper
@@ -119,25 +98,13 @@ cd tools/deck-prototyper
 ./start-prototyper.sh
 ```
 
-If the browser does not open automatically, open:
-
-```text
-http://localhost:8000/index.html
-```
-
-If port `8000` is busy:
+If the browser does not open, visit the local URL printed in Terminal. Use another port with:
 
 ```bash
 PORT=8010 python3 app.py
 ```
 
-If you are on a server or Linux setup without a desktop browser:
-
-```bash
-PROTOTYPER_OPEN_BROWSER=0 python3 app.py
-```
-
-## Run The Asset Browser
+## Asset Browser
 
 ### Mac
 
@@ -147,94 +114,58 @@ Double-click:
 tools/asset-browser/open-index.command
 ```
 
-### Linux Or Terminal
+### Linux or Terminal
 
 ```bash
 cd tools/asset-browser
 ./open-index.sh
 ```
 
-If the browser does not open automatically, copy the URL shown in Terminal.
-
-For best thumbnail support on Linux, install Pillow:
+For richer thumbnails:
 
 ```bash
 python3 -m pip install Pillow
 ```
 
-For video thumbnails, install `ffmpeg`.
+Install `ffmpeg` for video thumbnails.
 
-## Run The Font Previewer
+## Private files stay private
 
-You can open the HTML files directly:
+Do not commit client work, paid fonts, studies, exports, downloaded asset packs, or personal project media.
 
-```text
-tools/font-previewer/typeboards.html
-tools/font-previewer/figma-font-test-exporter.html
-```
+The repository ignores common local material, including:
 
-Or run a tiny local server:
+- font files and `.pitchfontstudy` documents;
+- Font Previewer build output;
+- Deck Prototyper media, manifests, backups, and exports;
+- Asset Browser indexes, thumbnails, and local tags;
+- common private media formats.
 
-```bash
-cd tools/font-previewer
-./start-font-previewer.sh
-```
+More detail: [`docs/assets-and-privacy.md`](docs/assets-and-privacy.md).
 
-Then open:
+## Troubleshooting
 
-```text
-http://localhost:8020/typeboards.html
-```
+### A command file is blocked
 
-## Private Files Stay Private
-
-Do not commit client work, paid fonts, downloaded asset packs, exports, or personal project media.
-
-The repo is set up to ignore common private/local files like:
-
-- `tools/deck-prototyper/_media/`
-- `tools/deck-prototyper/deck-copy.txt`
-- `tools/deck-prototyper/manifest.json`
-- `tools/deck-prototyper/Export/`
-- Asset Browser generated thumbnails and indexes
-- Font files and private media formats
-
-More detail: [docs/assets-and-privacy.md](docs/assets-and-privacy.md)
-
-## Project Handover
-
-The latest handover lives in [docs/handover.md](docs/handover.md). The active to-do list lives in [docs/todo.md](docs/todo.md).
-
-## If Something Goes Wrong
-
-### Terminal says permission denied
-
-Run this once:
+Right-click it, choose **Open**, then confirm. For source scripts, you can also run:
 
 ```bash
+chmod +x tools/font-previewer/build-font-previewer-app.command
+chmod +x tools/font-previewer/run-font-previewer.command
 chmod +x tools/deck-prototyper/start-prototyper.sh
 chmod +x tools/asset-browser/open-index.sh
-chmod +x tools/font-previewer/start-font-previewer.sh
 ```
 
-### Browser says the site cannot be reached
+### A local browser tool cannot be reached
 
-Make sure the Terminal window is still open. These tools run locally from that Terminal process.
-
-### Python cannot import PIL or Pillow
-
-Install Pillow:
-
-```bash
-python3 -m pip install Pillow
-```
+Keep the Terminal process running. Press `Ctrl+C` there when finished.
 
 ### The wrong version is showing
 
-Stop the server with `Ctrl+C`, run `git pull`, and start the tool again.
+Stop the running tool, pull the repository, rebuild, and reopen it.
 
-## Project Status
+## Project status
 
-This is an active learning project and a real production-adjacent toolkit. Expect rough edges, simple code, and frequent changes.
+This is active, production-adjacent open-source work. Rough edges should be documented, tested, and removed—not romanticised.
 
-See [docs/roadmap.md](docs/roadmap.md) for the direction.
+See [`docs/roadmap.md`](docs/roadmap.md) and the per-tool documentation for current boundaries.

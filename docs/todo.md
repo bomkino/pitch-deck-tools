@@ -1,104 +1,100 @@
 # Pitch Deck Tools To-Do
 
-Last updated: 2026-06-28
+Last updated: 2026-08-26
 
-This is the working list for the next development passes. The next priority is Font Previewer.
+## Priority 1: Font Previewer native macOS release
 
-## Priority 1: Font Previewer
+Goal: replace the browser experiment with a dependable local typography lab for pitch-deck decisions.
 
-Goal: make the Font Previewer feel like a proper local typography lab for pitch decks.
+Reached on `codex/native-macos-font-lab`:
+
+- native SwiftUI / CoreText architecture split into Core, MacKit, App, and Smoke targets;
+- direct file and recursive folder import without installing fonts;
+- static, variable, and collection-face handling through CoreText;
+- pitch-specific specimen presets;
+- Review, Focus, Compare, Waterfall, Metrics, Glyphs, and Pairing modes;
+- dark, light, and split backgrounds;
+- roles, decisions, tags, notes, casing, search grammar, and ordering;
+- variable axes and CoreText feature selectors;
+- metrics, script probes, missing-scalar diagnostics, source watching, and relinking;
+- schema-versioned `.pitchfontstudy` files with migration and relative paths;
+- cancellable, atomic PNG / PDF / JSON / Markdown exports;
+- privacy-default handoffs and a licence acknowledgement before source-font copying;
+- core tests, macOS tests, native smoke tests, builder, generated icon, signing, packaging, and CI workflow.
+
+Release gate:
+
+- make the macOS CI pass on the actual branch;
+- fix all Apple-only compiler and runtime failures exposed by CI;
+- inspect a CI-built app on a physical Mac;
+- manually review 20–50 legally held production fonts;
+- compare live output against PNG and PDF;
+- test one variable family, one collection, and one complex-script font with a competent reader;
+- merge only after the manual matrix in `tools/font-previewer/docs/QA.md` is complete.
+
+Next product pass:
+
+- named specimen recipes;
+- multi-select and bulk role / tag editing;
+- family grouping without identity collapse;
+- fallback-stack and cascade testing;
+- two-font identical-size versus fitted-size diff;
+- client-facing rationale annotations;
+- crash-recovery snapshots;
+- Developer ID signing and notarisation.
+
+Research later:
+
+- measured CoreText versus HarfBuzz shaping corpus;
+- optical-size and named-instance workflows;
+- deck-relevant vertical-metric and punctuation preflight;
+- stable Figma / web handoff;
+- UFO and Designspace only if font-development workflows become a real need.
+
+## Priority 2: Deck Prototyper stability
 
 Immediate:
 
-- Redesign `typeboards.html` so importing fonts, comparing fonts, and changing sample text feel calm and obvious.
-- Add pitch-deck sample text presets: title slide, logline, one-line promise, investor problem statement, quote, team bio, data label, caption, and legal/footer text.
-- Add a fixed comparison layout so panels do not jump around while fonts load.
-- Show basic font metadata when possible: family name, style, file name, weight guess, format, and source file.
-- Add a simple saved set format for local comparison boards.
-- Add export options for PNG/PDF or clean print-to-PDF layouts.
-
-Next:
-
-- Add a local font folder scan mode for offline work.
-- Add a stronger Figma handoff path from `figma-font-test-exporter.html`.
-- Add readability checks at common deck sizes.
-- Add dark/light background checks.
-- Add a compact mode for comparing many fonts quickly.
+- stabilise Assembly when switching between one and two media slots;
+- make GIF handling explicit with a static-frame choice;
+- improve copy-sync conflict preview;
+- reduce layout jumping and preserve right-panel scroll positions;
+- strengthen export preflight for missing media, overflow, empty slides, and local-file errors.
 
 Later:
 
-- Add font pairing suggestions.
-- Add brand-tone tags such as warm, technical, cinematic, editorial, luxury, playful, and institutional.
-- Add sample deck templates that use selected fonts.
-
-## Priority 2: Deck Prototyper Stability
-
-Goal: keep turning the prototyper from fragile into dependable.
-
-Immediate:
-
-- Stabilize Assembly when switching between one and two media slots.
-- Make GIF handling explicit: choose a static frame for slide placement, keep the source marked as GIF.
-- Add a clearer sync flow between `deck-copy.txt` and the Script tab, including conflict preview.
-- Reduce layout jumping between Curation, Lightbox Curation, and Assembly.
-- Make right-side panels keep stable widths and scroll positions.
-
-Next:
-
-- Improve media slot assignment from curation into assembly.
-- Add stronger export preflight checks for missing media, overflows, empty slides, and local file errors.
-- Add a clearer visual state for selected slide, selected media, and active slot.
-- Add a browser smoke-test checklist for Mac, Linux, and Brave Browser Beta.
-
-Later:
-
-- Add sample projects that can be loaded/reset safely.
-- Add keyboard shortcuts only where they are discoverable and documented.
-- Add a real headless export path if browser export becomes limiting.
+- sample projects with safe reset;
+- documented, discoverable shortcuts;
+- a headless export path if browser export remains limiting.
 
 ## Priority 3: Asset Browser
 
-Goal: make asset organization reliable for messy real projects.
-
 Immediate:
 
-- Improve the first-run state so users know where to put assets and how to rebuild the index.
-- Make missing optional helpers less scary on Linux.
-- Add clearer messages for open/reveal actions when the OS blocks them.
+- improve first-run guidance;
+- make missing optional helpers less alarming;
+- clarify open / reveal failures when the OS blocks them.
 
 Next:
 
-- Add import/export for tags when a team wants shared metadata.
-- Add a better duplicate-finding view.
-- Add saved filters for deck work: stills, posters, textures, fonts, screenshots, videos, references.
+- intentional tag import / export;
+- better duplicate review;
+- saved filters for deck work;
+- richer font consolidation reports.
 
-Later:
+## Cross-project
 
-- Add optional project profiles.
-- Add better browser-side review/shortlist workflows.
-- Add richer font consolidation reports.
-
-## Cross-Project
-
-Immediate:
-
-- Keep docs noob-friendly and GitHub-first.
-- Keep private media, fonts, exports, and client files ignored.
-- Keep app versions and changelogs current.
-- Keep an offline handover folder refreshed after major merges.
-
-Next:
-
-- Add simple smoke tests for each app.
-- Add issue templates for bug reports and feature requests.
-- Add a release checklist.
-- Add short demo videos or GIFs for each app.
+- Keep docs beginner-readable without hiding real constraints.
+- Keep private media, fonts, studies, exports, and client paths out of Git.
+- Keep changelogs and release gates current.
+- Add smoke tests before calling a tool dependable.
+- Prefer one tested product path over two half-maintained implementations.
 
 Definition of done for a useful batch:
 
-1. The change works locally.
-2. The docs tell a beginner how to use it.
-3. Private files are not staged.
-4. GitHub `main` has the latest merged version.
-5. The offline handover folder is refreshed when needed.
-
+1. The change works on its target platform.
+2. Automated tests and smoke gates pass.
+3. The relevant manual visual check is complete.
+4. Docs explain use, boundaries, and failure states.
+5. No private file or path is staged.
+6. A reviewable branch and pull request exist before merge.

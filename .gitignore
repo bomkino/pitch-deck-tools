@@ -4,9 +4,18 @@ Icon?
 __pycache__/
 *.pyc
 
+# Swift / Xcode local output
+.build/
+DerivedData/
+*.xcuserstate
+*.xcuserdata/
+tools/font-previewer/output/
+tools/font-previewer/macos/.build/
+
 # Private client/project material
 private/
 OFFLINE_HANDOVER/
+*.pitchfontstudy
 
 # Deck prototyper local working state
 tools/deck-prototyper/_media/
@@ -27,6 +36,9 @@ tools/asset-browser/_index/_scripts/live-updates.log
 # Common private media and font files
 *.otf
 *.ttf
+*.ttc
+*.otc
+*.dfont
 *.woff
 *.woff2
 *.psd

@@ -1,0 +1,90 @@
+name: Font Previewer macOS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/font-previewer-macos.yml"
+      - "tools/font-previewer/**"
+  pull_request:
+    paths:
+      - ".github/workflows/font-previewer-macos.yml"
+      - "tools/font-previewer/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: font-previewer-macos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-build-package:
+    name: Test, smoke, and package
+    runs-on: macos-14
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          set -euo pipefail
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      - name: Test portable core and macOS kit
+        run: |
+          set -euo pipefail
+          swift test --package-path tools/font-previewer/macos
+
+      - name: Native system-font smoke gauntlet
+        run: |
+          set -euo pipefail
+          swift run \
+            --package-path tools/font-previewer/macos \
+            -c release \
+            FontPreviewerSmoke \
+            --output "$RUNNER_TEMP/font-previewer-smoke"
+
+      - name: Build, sign, package, re-extract, and verify
+        run: |
+          set -euo pipefail
+          tools/font-previewer/build-font-previewer-app.command --no-install --skip-tests
+
+      - name: Inspect packaged app
+        run: |
+          set -euo pipefail
+          ZIP="tools/font-previewer/output/macos/Font Previewer.zip"
+          CHECKSUM="$ZIP.sha256"
+          test -s "$ZIP"
+          test -s "$CHECKSUM"
+          shasum -a 256 -c "$CHECKSUM"
+          VERIFY="$RUNNER_TEMP/font-previewer-verify"
+          mkdir -p "$VERIFY"
+          ditto -x -k "$ZIP" "$VERIFY"
+          APP="$VERIFY/Font Previewer.app"
+          test -x "$APP/Contents/MacOS/FontPreviewer"
+          plutil -lint "$APP/Contents/Info.plist"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")" = "dog.pitch.fontpreviewer"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
+      - name: Upload verified app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Font-Previewer-macOS-${{ github.sha }}
+          path: |
+            tools/font-previewer/output/macos/Font Previewer.zip
+            tools/font-previewer/output/macos/Font Previewer.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: Font-Previewer-smoke-${{ github.sha }}
+          path: ${{ runner.temp }}/font-previewer-smoke
+          if-no-files-found: error
+          retention-days: 14

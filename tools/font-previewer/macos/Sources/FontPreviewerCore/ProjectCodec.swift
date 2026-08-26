@@ -3,6 +3,7 @@ import Foundation
 public enum ProjectCodecError: LocalizedError, Equatable {
     case unsupportedSchema(Int)
     case invalidProject
+    case emptySourcePath
 
     public var errorDescription: String? {
         switch self {
@@ -10,6 +11,8 @@ public enum ProjectCodecError: LocalizedError, Equatable {
             return "This font study uses schema version \(version), newer than this app supports."
         case .invalidProject:
             return "The selected file is not a valid Font Previewer study."
+        case .emptySourcePath:
+            return "This study contains a font record with no source path."
         }
     }
 }
@@ -25,7 +28,7 @@ public enum ProjectCodec {
         return try encoder.encode(study)
     }
 
-    public static func decode(_ data: Data) throws -> FontStudy {
+    public static func decode(_ data: Data, projectURL: URL? = nil) throws -> FontStudy {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
@@ -48,15 +51,31 @@ public enum ProjectCodec {
         guard study.schemaVersion <= FontStudy.currentSchemaVersion else {
             throw ProjectCodecError.unsupportedSchema(study.schemaVersion)
         }
+        guard study.records.allSatisfy({ !$0.sourcePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            throw ProjectCodecError.emptySourcePath
+        }
 
         var migrated = study
         migrated.schemaVersion = FontStudy.currentSchemaVersion
-        migrated.records = FontIdentity.removingDuplicates(migrated.records)
+        migrated.tracking = min(0.25, max(-0.25, migrated.tracking))
+        migrated.lineHeight = min(3, max(0.7, migrated.lineHeight))
+        migrated.records = FontIdentity.removingDuplicates(migrated.records, projectURL: projectURL)
+        migrated.comparisonIDs = Array(migrated.comparisonIDs.filter { id in
+            migrated.records.contains { $0.id == id }
+        }.prefix(4))
+        if let heading = migrated.pairingHeadingID,
+           !migrated.records.contains(where: { $0.id == heading }) {
+            migrated.pairingHeadingID = nil
+        }
+        if let body = migrated.pairingBodyID,
+           !migrated.records.contains(where: { $0.id == body }) {
+            migrated.pairingBodyID = nil
+        }
         return migrated
     }
 
     public static func load(from url: URL) throws -> FontStudy {
-        try decode(Data(contentsOf: url))
+        try decode(Data(contentsOf: url), projectURL: url)
     }
 
     @discardableResult
@@ -74,13 +93,8 @@ public enum ProjectCodec {
 }
 
 private enum DateCodec {
-    static func string(from date: Date) -> String {
-        fractional.string(from: date)
-    }
-
-    static func date(from value: String) -> Date? {
-        fractional.date(from: value) ?? plain.date(from: value)
-    }
+    static func string(from date: Date) -> String { fractional.string(from: date) }
+    static func date(from value: String) -> Date? { fractional.date(from: value) ?? plain.date(from: value) }
 
     private static let fractional: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()

@@ -18,16 +18,34 @@ var targets: [Target] = [
 ]
 
 #if os(macOS)
-products.append(
-    .executable(name: "FontPreviewer", targets: ["FontPreviewerApp"])
-)
-targets.append(
+products += [
+    .library(name: "FontPreviewerMacKit", targets: ["FontPreviewerMacKit"]),
+    .executable(name: "FontPreviewer", targets: ["FontPreviewerApp"]),
+    .executable(name: "FontPreviewerSmoke", targets: ["FontPreviewerSmoke"]),
+]
+
+targets += [
+    .target(
+        name: "FontPreviewerMacKit",
+        dependencies: ["FontPreviewerCore"],
+        path: "Sources/FontPreviewerMacKit"
+    ),
     .executableTarget(
         name: "FontPreviewerApp",
-        dependencies: ["FontPreviewerCore"],
+        dependencies: ["FontPreviewerCore", "FontPreviewerMacKit"],
         path: "Sources/FontPreviewerApp"
-    )
-)
+    ),
+    .executableTarget(
+        name: "FontPreviewerSmoke",
+        dependencies: ["FontPreviewerCore", "FontPreviewerMacKit"],
+        path: "Sources/FontPreviewerSmoke"
+    ),
+    .testTarget(
+        name: "FontPreviewerMacKitTests",
+        dependencies: ["FontPreviewerCore", "FontPreviewerMacKit"],
+        path: "Tests/FontPreviewerMacKitTests"
+    ),
+]
 #endif
 
 let package = Package(
