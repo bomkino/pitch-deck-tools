@@ -49,27 +49,25 @@ public final class RuntimeFontFace: @unchecked Sendable {
         variations: [UInt32: Double],
         featureSelections: [Int: Int] = [:]
     ) -> CTFont {
+        // Build one descriptor for both the live preview and every export path. CoreText's
+        // descriptor-copy helpers preserve the source face while applying one explicit
+        // feature or variation at a time; sorting keeps the result deterministic.
         var workingDescriptor = descriptor
-        if !featureSelections.isEmpty {
-            let settings: [[CFString: Any]] = featureSelections.sorted { $0.key < $1.key }.map { type, selector in
-                [
-                    kCTFontFeatureTypeIdentifierKey: NSNumber(value: type),
-                    kCTFontFeatureSelectorIdentifierKey: NSNumber(value: selector),
-                ]
-            }
-            workingDescriptor = CTFontDescriptorCreateCopyWithAttributes(
+        for (type, selector) in featureSelections.sorted(by: { $0.key < $1.key }) {
+            workingDescriptor = CTFontDescriptorCreateCopyWithFeature(
                 workingDescriptor,
-                [kCTFontFeatureSettingsAttribute: settings] as CFDictionary
+                NSNumber(value: type),
+                NSNumber(value: selector)
             )
         }
-
-        let base = CTFontCreateWithFontDescriptor(workingDescriptor, size, nil)
-        guard !variations.isEmpty else { return base }
-        let dictionary = NSMutableDictionary()
-        for (identifier, value) in variations {
-            dictionary[NSNumber(value: identifier)] = NSNumber(value: value)
+        for (identifier, value) in variations.sorted(by: { $0.key < $1.key }) {
+            workingDescriptor = CTFontDescriptorCreateCopyWithVariation(
+                workingDescriptor,
+                NSNumber(value: identifier),
+                CGFloat(value)
+            )
         }
-        return CTFontCreateCopyWithVariations(base, dictionary) ?? base
+        return CTFontCreateWithFontDescriptor(workingDescriptor, size, nil)
     }
 
     public func missingScalars(
@@ -156,18 +154,21 @@ public enum FontCatalog {
                 failures.append(.init(url: url, reason: "CoreText could not read this file."))
                 continue
             }
-            let descriptors = rawDescriptors as NSArray
-            guard descriptors.count > 0 else {
+            let descriptorCount = CFArrayGetCount(rawDescriptors)
+            guard descriptorCount > 0 else {
                 failures.append(.init(url: url, reason: "No font faces were found."))
                 continue
             }
 
-            for offset in 0..<descriptors.count {
+            // CTFontManagerCreateFontDescriptorsFromURL promises one CTFontDescriptor for
+            // every face in the payload. The public API exposes no collection-index attribute,
+            // so its stable array position is the face index we persist and later relink.
+            for offset in 0..<descriptorCount {
                 if Task.isCancelled { break }
-                guard let descriptor = descriptors[offset] as? CTFontDescriptor else { continue }
+                guard let pointer = CFArrayGetValueAtIndex(rawDescriptors, offset) else { continue }
+                let descriptor = Unmanaged<CTFontDescriptor>.fromOpaque(pointer).takeUnretainedValue()
                 let base = CTFontCreateWithFontDescriptor(descriptor, 64, nil)
-                let descriptorIndex = numberAttribute(descriptor, key: kCTFontIndexAttribute)?.intValue
-                let faceIndex = descriptorIndex ?? offset
+                let faceIndex = offset
                 let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
                 let family = nonEmpty(
                     stringAttribute(descriptor, key: kCTFontFamilyNameAttribute),
@@ -175,7 +176,7 @@ public enum FontCatalog {
                 )
                 let style = nonEmpty(
                     stringAttribute(descriptor, key: kCTFontStyleNameAttribute),
-                    fallback: CTFontCopyStyleName(base) as String
+                    fallback: (CTFontCopyName(base, kCTFontStyleNameKey) as String?) ?? "Regular"
                 )
                 let postScript = nonEmpty(
                     stringAttribute(descriptor, key: kCTFontNameAttribute),
@@ -368,10 +369,6 @@ public enum FontCatalog {
 
     private static func stringAttribute(_ descriptor: CTFontDescriptor, key: CFString) -> String? {
         CTFontDescriptorCopyAttribute(descriptor, key) as? String
-    }
-
-    private static func numberAttribute(_ descriptor: CTFontDescriptor, key: CFString) -> NSNumber? {
-        CTFontDescriptorCopyAttribute(descriptor, key) as? NSNumber
     }
 
     private static func nonEmpty(_ candidate: String?, fallback: String) -> String {
